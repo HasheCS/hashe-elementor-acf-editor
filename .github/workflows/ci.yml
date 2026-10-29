@@ -2,7 +2,7 @@ name: Hashe Elementor ACF Editor CI
 
 on:
   push:
-    branches: ['main', 'feature/**', 'fix/**']
+    branches: ['main', 'release/**', 'feature/**', 'fix/**']
   pull_request:
 
 permissions:
@@ -21,11 +21,13 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: none
-      - name: PHP syntax
+      - name: PHP syntax (plugin, ACF Pro adapters, tests)
         run: |
+          set -euo pipefail
           php -l hashe-elementor-acf-editor.php
+          php -l includes/extended-fields.php
           php -l tests/php-smoke.php
-      - name: Native ACF and security regression tests
+      - name: WordPress / Elementor / ACF standalone security tests
         run: php tests/php-smoke.php
 
   javascript:
@@ -35,7 +37,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validate editor JavaScript
+      - name: Elementor native-control and save regression checks
         run: |
+          set -euo pipefail
           node --check assets/editor-native.js
+          node --check tests/js-smoke.cjs
+          node --check tests/dirty-save.cjs
           node tests/js-smoke.cjs
+          node tests/dirty-save.cjs
