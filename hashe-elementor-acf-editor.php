@@ -3,9 +3,11 @@
  * Plugin Name: Hashe Elementor ACF Editor
  * Description: Edit context-matched ACF field groups directly within Elementor Page Settings — no iframe or WordPress admin toolbar.
  * Version: 0.2.0-rc.1
- * Author: Hashe Computer Solutions
- * Author URI: https://hashe.com/
+ * Author: Hashe Computer Solutions (Pvt) Ltd
+ * Author URI: https://www.hashe.com/
+ * Plugin URI: https://github.com/HasheCS/hashe-elementor-acf-editor
  * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Text Domain: hashe-elementor-acf-editor

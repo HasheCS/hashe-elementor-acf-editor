@@ -2,7 +2,7 @@
 
 Edit Advanced Custom Fields **inside Elementor's Page Settings**. No iframe, WordPress toolbar, or trip back to the standard WordPress editor.
 
-An open-source WordPress plugin by [Hashe Computer Solutions](https://hashe.com/), derived from a field-editing workflow developed by Hashe.
+**Free and open-source software**, developed and maintained by [Hashe Computer Solutions (Pvt) Ltd](https://www.hashe.com/).
 
 **Testing release candidate — v0.2.0-rc.1.** Backend regression checks passed on Solutions Moco, and the native Elementor sidebar layout was visually approved. The full image-picker and repeater-button interaction flow still needs final interactive acceptance before a stable release.
 
@@ -55,6 +55,12 @@ Only ACF fields belonging to location-matched groups are accepted by a dedicated
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Do not include private website data, customer content, or proprietary ACF Pro source in contributions.
 
-## License
+## Author, license and trademarks
 
-[GPL-2.0-or-later](LICENSE). Copyright Hashe Computer Solutions.
+**Developer and maintainer:** [Hashe Computer Solutions (Pvt) Ltd](https://www.hashe.com/).
+
+**License:** [GNU General Public License v2 or later](LICENSE) (`GPL-2.0-or-later`). This plugin is provided free of charge and may be used, modified and redistributed under the GPL terms.
+
+Copyright © 2026 Hashe Computer Solutions (Pvt) Ltd.
+
+Elementor and Advanced Custom Fields (ACF) are third-party products and trademarks. This is an independent Hashe integration; no affiliation or endorsement is implied.
