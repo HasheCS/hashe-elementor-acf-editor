@@ -1,149 +1,407 @@
-/* Hashe ACF controls live inside Elementor's own Page Settings panel.
-   All selectors are scoped: no WordPress toolbar, iframe, or admin page. */
-.elementor-panel .heae-editor-control,
-.elementor-panel .heae-editor-control .elementor-control-content {
-    width: 100%;
-    max-width: 100%;
-    padding: 0;
+/*
+ * Hashe Elementor ACF Editor — native-sidebar layout v0.2.1-qa.2
+ * All layout overrides are restricted to #elementor-panel .heae-native-panel.
+ * No iframe, dashboard toolbar, or cross-editor global CSS.
+ */
+
+/* Elementor's Page Settings template contains a literal
+ * button.elementor-tab-control-heae_acf > span. Registering the ACF logo
+ * directly within the tab label guarantees it is visible on first paint,
+ * without waiting for late JavaScript DOM decoration. */
+button.elementor-tab-control-heae_acf > span {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.25;
 }
-.elementor-panel .heae-native-panel {
+button.elementor-tab-control-heae_acf .heae-acf-tab-logo {
+    display: block !important;
+    width: 19px !important;
+    height: 19px !important;
+    min-width: 19px;
+    min-height: 19px;
+    max-width: 19px;
+    max-height: 19px;
+    margin: 0 auto 3px !important;
+    object-fit: contain;
+    pointer-events: none;
+}
+/* Real installed ACF brand asset displayed above the ACF tab label. */
+#elementor-panel .heae-acf-navigation-tab .heae-acf-tab-logo,
+#elementor-panel [data-tab="heae_acf"] .heae-acf-tab-logo {
+    display: block;
+    width: 18px;
+    height: 18px;
+    max-width: 18px;
+    margin: 0 auto 5px;
+    object-fit: contain;
+    pointer-events: none;
+}
+#elementor-panel .heae-acf-navigation-tab,
+#elementor-panel [data-tab="heae_acf"].heae-acf-navigation-tab {
+    text-align: center;
+    min-width: 0;
+}
+
+/* Override Elementor's raw-HTML panel control spacing, not unrelated controls. */
+#elementor-panel .elementor-control-heae_fields_control,
+#elementor-panel .elementor-control-heae_fields_control > .elementor-control-content,
+#elementor-panel .elementor-control-heae_fields_control .elementor-control-raw-html,
+#elementor-panel .heae-editor-control,
+#elementor-panel .heae-editor-control .elementor-control-content {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+#elementor-panel .heae-native-panel {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    padding: 2px 0 12px;
-    color: var(--e-a-color-txt, #333);
+    max-width: 100%;
+    padding: 4px 12px 18px;
     font-family: inherit;
     font-size: 12px;
-}
-.elementor-panel .heae-panel-intro {
-    color: var(--e-a-color-txt-muted, #69727d);
-    font-size: 12px;
-    margin: 4px 0 14px;
     line-height: 1.5;
+    color: var(--e-a-color-txt, #dadde0);
 }
-.elementor-panel .heae-acf-form,
-.elementor-panel .heae-acf-form .acf-fields {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-}
-.elementor-panel .heae-acf-form .acf-fields > .acf-field {
-    border: 0 !important;
-    background: transparent;
-    padding: 12px 0;
-    margin: 0;
-    min-width: 0;
+#elementor-panel .heae-native-panel *,
+#elementor-panel .heae-native-panel *::before,
+#elementor-panel .heae-native-panel *::after {
     box-sizing: border-box;
-    border-bottom: 1px solid var(--e-a-border-color, #d5d8dc) !important;
 }
-.elementor-panel .heae-acf-form .acf-field .acf-label {
-    width: auto;
-    float: none;
-    margin: 0 0 7px;
-}
-.elementor-panel .heae-acf-form .acf-label label {
-    color: var(--e-a-color-txt, #333);
+#elementor-panel .heae-panel-intro {
+    margin: 0 0 16px;
     font-size: 12px;
-    line-height: 1.4;
-    font-weight: 600;
-    padding: 0;
-    margin: 0;
+    line-height: 1.55;
+    color: var(--e-a-color-txt-muted, #aaa);
 }
-.elementor-panel .heae-acf-form .acf-label .description {
-    font-size: 11px;
-    line-height: 1.45;
-    color: var(--e-a-color-txt-muted, #69727d);
-    margin: 5px 0 0;
-}
-.elementor-panel .heae-acf-form .acf-input,
-.elementor-panel .heae-acf-form .acf-input-wrap {
+#elementor-panel .heae-field-group {
+    display: block;
     width: 100%;
     min-width: 0;
+    margin: 0 0 16px;
+}
+#elementor-panel .heae-field-group-title {
+    display: block;
+    margin: 0;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--e-a-border-color, #555);
+    color: var(--e-a-color-txt, inherit);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+#elementor-panel .heae-native-panel .acf-form,
+#elementor-panel .heae-native-panel .acf-fields {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin: 0;
     padding: 0;
-}
-.elementor-panel .heae-acf-form input[type=text],
-.elementor-panel .heae-acf-form input[type=number],
-.elementor-panel .heae-acf-form input[type=email],
-.elementor-panel .heae-acf-form input[type=url],
-.elementor-panel .heae-acf-form select,
-.elementor-panel .heae-acf-form textarea {
-    width: 100%;
-    max-width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--e-a-border-color, #b4b5b7);
-    border-radius: 3px;
-    background: var(--e-a-bg-default, #fff);
-    color: var(--e-a-color-txt, #333);
-    font: inherit;
+    border: 0;
+    background: transparent;
     box-shadow: none;
-    box-sizing: border-box;
 }
-.elementor-panel .heae-acf-form textarea { min-height: 75px; resize: vertical; }
-.elementor-panel .heae-acf-form .acf-switch { vertical-align: middle; }
-.elementor-panel .heae-acf-form .acf-image-uploader .image-wrap img {
+
+/* ACF's default CSS uses WP-admin table positioning; force vertical,
+ * independent field blocks that fit Elementor's ~300px editing sidebar. */
+#elementor-panel .heae-native-panel .heae-field-group > .acf-fields > .acf-field {
+    display: block !important;
+    position: relative;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    float: none !important;
+    clear: both;
+    padding: 14px 0 16px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--e-a-border-color, #51555b) !important;
+    background: transparent !important;
+}
+#elementor-panel .heae-native-panel .heae-field-group > .acf-fields > .acf-field:last-child {
+    border-bottom: 0 !important;
+}
+#elementor-panel .heae-native-panel .acf-field .acf-label,
+#elementor-panel .heae-native-panel .acf-field .acf-input {
     display: block;
+    width: 100% !important;
+    max-width: 100%;
+    float: none !important;
+    clear: both;
+    position: relative;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0;
+    background: transparent;
+}
+#elementor-panel .heae-native-panel .acf-field .acf-label {
+    margin-bottom: 8px !important;
+}
+#elementor-panel .heae-native-panel .acf-field .acf-label label {
+    display: block !important;
     width: auto;
     max-width: 100%;
-    max-height: 145px;
+    padding: 0;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.45 !important;
+    letter-spacing: 0;
+    color: var(--e-a-color-txt, inherit);
+    white-space: normal;
+    overflow-wrap: break-word;
 }
-.elementor-panel .heae-acf-form .acf-table {
-    max-width: 100%;
-    overflow-wrap: anywhere;
+#elementor-panel .heae-native-panel .acf-label .description,
+#elementor-panel .heae-native-panel .acf-label p.description {
+    display: block;
+    margin: 5px 0 0 !important;
     font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--e-a-color-txt-muted, #aaa);
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
-.elementor-panel .heae-acf-form .acf-repeater { max-width: 100%; }
-.elementor-panel .heae-acf-form .acf-repeater .acf-row-handle {
-    width: 20px;
-    padding: 5px 2px;
+#elementor-panel .heae-native-panel .acf-required {
+    color: #e07b83;
+    margin-left: 3px;
 }
-.elementor-panel .heae-acf-form .acf-repeater .acf-field {
-    padding: 6px 3px;
+#elementor-panel .heae-native-panel .acf-input-wrap,
+#elementor-panel .heae-native-panel .acf-input-wrap > * {
+    max-width: 100%;
+}
+
+/* Fields with native Elementor-sized borders, inset padding and dark-mode
+ * support. Do not override special inputs such as ACF switch/checkbox. */
+#elementor-panel .heae-native-panel .acf-input input[type="text"],
+#elementor-panel .heae-native-panel .acf-input input[type="number"],
+#elementor-panel .heae-native-panel .acf-input input[type="email"],
+#elementor-panel .heae-native-panel .acf-input input[type="url"],
+#elementor-panel .heae-native-panel .acf-input input[type="password"],
+#elementor-panel .heae-native-panel .acf-input select,
+#elementor-panel .heae-native-panel .acf-input textarea {
+    display: block;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100% !important;
+    min-height: 35px;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    border: 1px solid var(--e-a-border-color, #626870);
+    border-radius: 4px;
+    color: var(--e-a-color-txt, #d9dbe0);
+    background: var(--e-a-bg-default, #27292d);
+    box-shadow: none !important;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+#elementor-panel .heae-native-panel .acf-input textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+#elementor-panel .heae-native-panel .acf-input input:focus,
+#elementor-panel .heae-native-panel .acf-input select:focus,
+#elementor-panel .heae-native-panel .acf-input textarea:focus {
+    border-color: var(--e-a-color-primary, #6e9cf6);
+    outline: 1px solid var(--e-a-color-primary, #6e9cf6);
+}
+#elementor-panel .heae-native-panel .select2-container,
+#elementor-panel .heae-native-panel .select2-selection {
+    width: 100% !important;
+    max-width: 100% !important;
     min-width: 0;
 }
-.elementor-panel .heae-acf-form .acf-actions { margin-top: 9px; }
-.elementor-panel .heae-acf-form .button,
-.elementor-panel .heae-acf-form .acf-button {
+#elementor-panel .heae-native-panel .acf-input .acf-switch {
+    display: inline-flex !important;
+    vertical-align: middle;
+    align-items: center;
+    min-width: 88px;
+    min-height: 29px;
+    max-width: 100%;
+    margin: 0;
+    border: 1px solid var(--e-a-border-color, #626870);
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--e-a-bg-default, #27292d);
+}
+#elementor-panel .heae-native-panel .acf-switch .acf-switch-on,
+#elementor-panel .heae-native-panel .acf-switch .acf-switch-off {
     display: inline-flex;
     align-items: center;
-    min-height: 27px;
-    padding: 5px 10px;
+    justify-content: center;
+    min-width: 38px;
+    padding: 5px 9px;
     font-size: 11px;
-    background: var(--e-a-bg-default, #fff);
-    color: var(--e-a-color-txt, #333);
-    border: 1px solid var(--e-a-border-color, #b4b5b7);
-    border-radius: 3px;
-    cursor: pointer;
-    text-decoration: none;
+    line-height: 1.4;
 }
-.elementor-panel .heae-form-actions {
-    padding: 16px 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+#elementor-panel .heae-native-panel .acf-switch.-on .acf-switch-on {
+    color: #fff;
+    background: var(--e-a-color-primary, #477cc9);
+}
+#elementor-panel .heae-native-panel .acf-switch:not(.-on) .acf-switch-off {
+    color: var(--e-a-color-txt, #d9dbe0);
+    background: var(--e-a-bg-hover, #46494f);
+}
+#elementor-panel .heae-native-panel .acf-switch .acf-switch-slider {
+    display: none;
+}
+
+/* ACF Image: one informative message and one obvious Add Image button. */
+#elementor-panel .heae-native-panel .acf-image-uploader {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+#elementor-panel .heae-native-panel .acf-image-uploader .hide-if-value {
+    display: block;
+    padding: 9px 0;
+    line-height: 1.5;
+}
+#elementor-panel .heae-native-panel .acf-image-uploader .hide-if-value > p,
+#elementor-panel .heae-native-panel .acf-image-uploader .hide-if-value > span {
+    display: block;
+    margin: 0 0 8px;
+}
+#elementor-panel .heae-native-panel .acf-image-uploader .image-wrap img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: 150px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+/* The ACF repeater is rendered in Block mode (rather than Table) so each
+ * repeat row has stacked subfield labels/values and legible action buttons. */
+#elementor-panel .heae-native-panel .acf-repeater,
+#elementor-panel .heae-native-panel .acf-repeater .acf-table {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+#elementor-panel .heae-native-panel .acf-repeater > .acf-table > thead {
+    display: none;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-row {
+    background: transparent;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-row-handle {
+    width: 22px !important;
+    min-width: 18px;
+    max-width: 22px;
+    padding: 5px 2px !important;
+    font-size: 11px;
+    text-align: center;
+    overflow: hidden;
+    vertical-align: top;
+}
+#elementor-panel .heae-native-panel .acf-repeater td.acf-fields,
+#elementor-panel .heae-native-panel .acf-repeater .acf-row .acf-fields {
+    min-width: 0;
+    max-width: 100%;
+    width: auto !important;
+    padding: 8px 6px !important;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-row .acf-field {
+    display: block;
+    padding: 7px 0 10px !important;
+    min-width: 0;
+    width: 100% !important;
+    border: 0 !important;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-row .acf-field + .acf-field {
+    border-top: 1px solid var(--e-a-border-color, #51555b) !important;
+}
+#elementor-panel .heae-native-panel .acf-repeater .acf-actions {
+    margin: 10px 0 0;
+    padding: 0;
+    text-align: left;
+}
+
+/* Make ACF links and buttons readable as controls, not merged inline text. */
+#elementor-panel .heae-native-panel .acf-input .button,
+#elementor-panel .heae-native-panel .acf-input .acf-button,
+#elementor-panel .heae-native-panel .acf-repeater .acf-actions .button {
+    display: inline-flex !important;
     align-items: center;
+    justify-content: center;
+    margin: 2px 4px 2px 0;
+    padding: 6px 10px !important;
+    min-height: 30px;
+    max-width: 100%;
+    border: 1px solid var(--e-a-border-color, #626870) !important;
+    border-radius: 4px;
+    color: var(--e-a-color-txt, inherit) !important;
+    background: var(--e-a-bg-default, transparent) !important;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.35;
+    text-decoration: none !important;
+    text-align: center;
+    cursor: pointer;
+    white-space: normal;
 }
-.elementor-panel .heae-save {
+#elementor-panel .heae-native-panel .acf-input a:not(.button):not(.acf-button) {
     display: inline-block;
+    margin: 3px 4px 3px 0;
+    text-decoration: underline;
+}
+#elementor-panel .heae-form-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    padding: 17px 0 4px;
+    border-top: 1px solid var(--e-a-border-color, #51555b);
+}
+#elementor-panel .heae-save {
+    display: block;
+    width: 100%;
+    min-height: 36px;
     padding: 8px 12px;
     border: 0;
-    border-radius: 3px;
+    border-radius: 4px;
+    background: var(--e-a-color-primary, #2772c4);
+    color: #fff !important;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
     cursor: pointer;
 }
-.elementor-panel .heae-save:disabled { opacity: .55; cursor: wait; }
-.elementor-panel .heae-form-status { font-size: 11px; line-height: 1.4; }
-.elementor-panel .heae-form-status.heae-error { color: #b32d2e; }
-.elementor-panel .heae-empty-state {
-    padding: 16px 8px 22px;
-    color: var(--e-a-color-txt-muted, #69727d);
+#elementor-panel .heae-save:hover { filter: brightness(1.09); }
+#elementor-panel .heae-save:disabled { opacity: .55; cursor: wait; }
+#elementor-panel .heae-form-status {
+    display: block;
+    min-height: 1em;
+    font-size: 11px;
     line-height: 1.5;
+}
+#elementor-panel .heae-form-status.heae-error { color: #e26d76; }
+#elementor-panel .heae-empty-state {
+    margin: 12px 0;
+    padding: 20px 10px;
+    border: 1px dashed var(--e-a-border-color, #626870);
+    border-radius: 6px;
+    color: var(--e-a-color-txt-muted, #a4a7b0);
+    line-height: 1.6;
     text-align: center;
 }
-.elementor-panel .heae-empty-state span {
-    display: block;
-    font-size: 22px;
-    margin-bottom: 7px;
-}
-.elementor-panel .heae-acf-form .select2-container { max-width: 100%; width: 100% !important; }
+#elementor-panel .heae-empty-state span { display: block; font-size: 22px; margin: 0 0 8px; }
