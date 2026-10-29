@@ -1,149 +1,41 @@
-/* Hashe ACF controls live inside Elementor's own Page Settings panel.
-   All selectors are scoped: no WordPress toolbar, iframe, or admin page. */
-.elementor-panel .heae-editor-control,
-.elementor-panel .heae-editor-control .elementor-control-content {
-    width: 100%;
-    max-width: 100%;
-    padding: 0;
-}
-.elementor-panel .heae-native-panel {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    padding: 2px 0 12px;
-    color: var(--e-a-color-txt, #333);
-    font-family: inherit;
-    font-size: 12px;
-}
-.elementor-panel .heae-panel-intro {
-    color: var(--e-a-color-txt-muted, #69727d);
-    font-size: 12px;
-    margin: 4px 0 14px;
-    line-height: 1.5;
-}
-.elementor-panel .heae-acf-form,
-.elementor-panel .heae-acf-form .acf-fields {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-}
-.elementor-panel .heae-acf-form .acf-fields > .acf-field {
-    border: 0 !important;
-    background: transparent;
-    padding: 12px 0;
-    margin: 0;
-    min-width: 0;
-    box-sizing: border-box;
-    border-bottom: 1px solid var(--e-a-border-color, #d5d8dc) !important;
-}
-.elementor-panel .heae-acf-form .acf-field .acf-label {
-    width: auto;
-    float: none;
-    margin: 0 0 7px;
-}
-.elementor-panel .heae-acf-form .acf-label label {
-    color: var(--e-a-color-txt, #333);
-    font-size: 12px;
-    line-height: 1.4;
-    font-weight: 600;
-    padding: 0;
-    margin: 0;
-}
-.elementor-panel .heae-acf-form .acf-label .description {
-    font-size: 11px;
-    line-height: 1.45;
-    color: var(--e-a-color-txt-muted, #69727d);
-    margin: 5px 0 0;
-}
-.elementor-panel .heae-acf-form .acf-input,
-.elementor-panel .heae-acf-form .acf-input-wrap {
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-}
-.elementor-panel .heae-acf-form input[type=text],
-.elementor-panel .heae-acf-form input[type=number],
-.elementor-panel .heae-acf-form input[type=email],
-.elementor-panel .heae-acf-form input[type=url],
-.elementor-panel .heae-acf-form select,
-.elementor-panel .heae-acf-form textarea {
-    width: 100%;
-    max-width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--e-a-border-color, #b4b5b7);
-    border-radius: 3px;
-    background: var(--e-a-bg-default, #fff);
-    color: var(--e-a-color-txt, #333);
-    font: inherit;
-    box-shadow: none;
-    box-sizing: border-box;
-}
-.elementor-panel .heae-acf-form textarea { min-height: 75px; resize: vertical; }
-.elementor-panel .heae-acf-form .acf-switch { vertical-align: middle; }
-.elementor-panel .heae-acf-form .acf-image-uploader .image-wrap img {
+/*
+ * Native Elementor Page Settings ACF controls.
+ * Fields and repeater use Elementor's own styling and templates;
+ * no embedded ACF form, iframe, or foreign white card.
+ */
+#elementor-panel .heae-acf-tab-logo {
     display: block;
-    width: auto;
-    max-width: 100%;
-    max-height: 145px;
+    width: 18px;
+    height: 18px;
+    margin: 0 auto 3px;
+    object-fit: contain;
 }
-.elementor-panel .heae-acf-form .acf-table {
-    max-width: 100%;
+#elementor-panel .elementor-control-heae_acf_save_action .heae-save-status {
+    display: block;
+    margin: 8px 10px 4px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--e-a-color-success, #1b946a);
     overflow-wrap: anywhere;
-    font-size: 11px;
 }
-.elementor-panel .heae-acf-form .acf-repeater { max-width: 100%; }
-.elementor-panel .heae-acf-form .acf-repeater .acf-row-handle {
-    width: 20px;
-    padding: 5px 2px;
+#elementor-panel .elementor-control-heae_acf_save_action .heae-save-status.heae-save-error {
+    color: var(--e-a-color-danger, #dc3545);
 }
-.elementor-panel .heae-acf-form .acf-repeater .acf-field {
-    padding: 6px 3px;
-    min-width: 0;
+/* The native Save control follows the final ACF field, not an accordion. */
+#elementor-panel .elementor-control-heae_acf_save_action {
+    border-top: 1px solid var(--e-a-border-color, #d5d8dc);
+    margin-top: 12px;
+    padding-top: 15px;
+    padding-bottom: 16px;
 }
-.elementor-panel .heae-acf-form .acf-actions { margin-top: 9px; }
-.elementor-panel .heae-acf-form .button,
-.elementor-panel .heae-acf-form .acf-button {
-    display: inline-flex;
-    align-items: center;
-    min-height: 27px;
-    padding: 5px 10px;
-    font-size: 11px;
-    background: var(--e-a-bg-default, #fff);
-    color: var(--e-a-color-txt, #333);
-    border: 1px solid var(--e-a-border-color, #b4b5b7);
-    border-radius: 3px;
-    cursor: pointer;
-    text-decoration: none;
-}
-.elementor-panel .heae-form-actions {
-    padding: 16px 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-.elementor-panel .heae-save {
-    display: inline-block;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: 3px;
-    cursor: pointer;
-}
-.elementor-panel .heae-save:disabled { opacity: .55; cursor: wait; }
-.elementor-panel .heae-form-status { font-size: 11px; line-height: 1.4; }
-.elementor-panel .heae-form-status.heae-error { color: #b32d2e; }
-.elementor-panel .heae-empty-state {
-    padding: 16px 8px 22px;
-    color: var(--e-a-color-txt-muted, #69727d);
-    line-height: 1.5;
-    text-align: center;
-}
-.elementor-panel .heae-empty-state span {
+#elementor-panel .elementor-control-heae_acf_save_action .elementor-control-field {
     display: block;
-    font-size: 22px;
-    margin-bottom: 7px;
 }
-.elementor-panel .heae-acf-form .select2-container { max-width: 100%; width: 100% !important; }
+#elementor-panel .elementor-control-heae_acf_save_action button {
+    width: 100%;
+    min-height: 36px;
+}
+#elementor-panel .elementor-control-heae_acf_save_action button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}

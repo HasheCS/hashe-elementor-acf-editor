@@ -20,30 +20,41 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validate code and release tag
+      - name: Verify release code, licensing and tag
         shell: bash
         run: |
           set -euo pipefail
           php -l hashe-elementor-acf-editor.php
+          php -l includes/extended-fields.php
           php tests/php-smoke.php
           node --check assets/editor-native.js
           node tests/js-smoke.cjs
-          grep -q "Version: ${GITHUB_REF_NAME#v}" hashe-elementor-acf-editor.php
-      - name: Build standalone WordPress plugin ZIP
+          node tests/dirty-save.cjs
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -Fq " * Version: $VERSION" hashe-elementor-acf-editor.php
+          grep -Fq "Stable tag: $VERSION" readme.txt
+          grep -Fq 'License: GPL-2.0-or-later' hashe-elementor-acf-editor.php
+          grep -Fq 'Author: Hashe Computer Solutions (Pvt) Ltd' hashe-elementor-acf-editor.php
+      - name: Package complete installable WordPress plugin
         shell: bash
         run: |
           set -euo pipefail
           PLUGIN=hashe-elementor-acf-editor
-          mkdir -p "dist/$PLUGIN/assets"
-          cp hashe-elementor-acf-editor.php readme.txt LICENSE "dist/$PLUGIN/"
+          mkdir -p "dist/$PLUGIN/assets" "dist/$PLUGIN/includes"
+          cp hashe-elementor-acf-editor.php readme.txt README.md QA.md LICENSE "dist/$PLUGIN/"
           cp assets/editor-native.js assets/editor-native.css "dist/$PLUGIN/assets/"
+          cp includes/extended-fields.php "dist/$PLUGIN/includes/"
           (
             cd dist
             zip -q -r "$PLUGIN-${GITHUB_REF_NAME}.zip" "$PLUGIN"
             sha256sum "$PLUGIN-${GITHUB_REF_NAME}.zip" > SHA256SUMS.txt
           )
           unzip -tq "dist/$PLUGIN-${GITHUB_REF_NAME}.zip"
-      - name: Publish release ZIP
+          unzip -Z1 "dist/$PLUGIN-${GITHUB_REF_NAME}.zip" | grep -Fqx "$PLUGIN/includes/extended-fields.php"
+          unzip -Z1 "dist/$PLUGIN-${GITHUB_REF_NAME}.zip" | grep -Fqx "$PLUGIN/hashe-elementor-acf-editor.php"
+          unzip -Z1 "dist/$PLUGIN-${GITHUB_REF_NAME}.zip" | grep -Fqx "$PLUGIN/LICENSE"
+          echo "Package contains the entrypoint, extended controls, scripts, docs and GPL."
+      - name: Publish free public GitHub release ZIP
         uses: softprops/action-gh-release@v2
         with:
           draft: false
