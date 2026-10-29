@@ -1,60 +1,77 @@
 # Hashe Elementor ACF Editor
 
-Edit Advanced Custom Fields **inside Elementor's Page Settings**. No iframe, WordPress toolbar, or trip back to the standard WordPress editor.
+Edit Advanced Custom Fields directly inside **Elementor → Page Settings → ACF**, using ACF's native controls. No iframe, embedded WordPress admin screen, or trip back to the block/classic editor.
 
-An open-source WordPress plugin by [Hashe Computer Solutions](https://hashe.com/), derived from a field-editing workflow developed by Hashe.
+An open-source project by [Hashe Computer Solutions](https://hashe.com/). Distributed under **GPL-2.0-or-later**.
 
-**Testing release candidate — v0.2.0-rc.1.** Backend regression checks passed on Solutions Moco, and the native Elementor sidebar layout was visually approved. The full image-picker and repeater-button interaction flow still needs final interactive acceptance before a stable release.
+**Current testing release: v0.3.1-rc.1.** This release supersedes the initial v0.2.0-rc.1 candidate, which had a JavaScript asset registration problem in Elementor 4.
 
-## Features
+## What it does
 
-- Adds an **ACF** tab to Elementor's Page Settings.
-- Detects the current WordPress page/post and displays only active ACF field groups whose location rules match that document.
-- Renders ACF's own input controls directly in the Elementor sidebar, rather than maintaining substitute field widgets.
-- Provides a separate **Save ACF Fields** button, with an inline success or validation error message.
-- Supports field types supplied by the connected ACF installation, including text, textarea, select, true/false, image and repeater (Pro field types need ACF Pro).
-- No embedded WordPress admin page, iframe, or hardcoded customer-specific identifiers.
-- Permission-aware and nonce-protected: submissions can update only field keys belonging to ACF groups assigned to the current document.
-- Uses scoped Elementor-sidebar styles that follow the editor theme.
+- Adds an **ACF** tab with the official ACF icon inside Elementor Page Settings.
+- Finds ACF field groups whose WordPress location rules match the current post or page.
+- Renders **ACF's own field controls**, including text, textarea, select, true/false, image, and Pro repeater fields. No substitute implementations.
+- Retains native repeater behavior: Add Row, blank new row, drag-to-reorder, Remove confirmation, and saving the resulting order.
+- Uses the native WordPress Media Library modal for ACF image selection.
+- Provides a separate **Save ACF Fields** button, with success and validation messages. Changes remain available after reopening Elementor.
+- Uses a dedicated WordPress AJAX endpoint with edit-post permission, document nonce, ACF field group allowlisting, and ACF validation.
+- Styles the controls for Elementor's sidebar and light/dark user-interface colors.
 
-## Compatibility
+## Requirements and compatibility
 
-**Verified test environment:** WordPress on Solutions Moco, Elementor 4.3.5, Elementor Pro 4.3.2 and ACF Pro 6.8.10 (October 2026). Requires PHP 7.4+ and WordPress 5.8+.
+- WordPress 5.8+ and PHP 7.4+.
+- Elementor and Advanced Custom Fields active. **ACF Pro is needed for Pro field types such as Repeater.**
+- User account with permission to edit the document.
 
-Elementor and ACF need to be active. This candidate has been tested against ACF **Pro**; every third-party field type or Elementor fork is not guaranteed to work. Standard ACF Free compatibility is a future test target, not a verified claim.
+**Browser-verified environment (October 29, 2026):** WordPress on Solutions Moco, Elementor 4.3.5, Elementor Pro 4.3.2, and ACF Pro 6.8.10.
 
-The plugin ships **no ACF, ACF Pro, Elementor or Elementor Pro binaries** and does not bypass software licenses.
+The plugin includes **no proprietary ACF Pro, Elementor Pro, or Font Awesome assets**. It uses the licensed site's installed ACF and Elementor APIs and does not bypass licenses.
 
-## Installation
+## Install
 
-1. Back up the website.
-2. Download the versioned WordPress-installable ZIP **from GitHub Releases** (not the GitHub-generated source ZIP).
-3. In WordPress, choose **Plugins → Add New Plugin → Upload Plugin**, upload the ZIP and activate it.
-4. Make sure Elementor and ACF Pro are active.
-5. Create an ACF field group with location rules matching a page or post you edit with Elementor.
-6. Open that document in Elementor → **Page Settings → ACF**.
-7. Edit the fields and click **Save ACF Fields**.
+1. Back up your WordPress installation and test on staging first.
+2. Download the versioned, **WordPress-installable ZIP** from [GitHub Releases](https://github.com/HasheCS/hashe-elementor-acf-editor/releases). Do not use GitHub's automatic source-code ZIP for plugin installation.
+3. In WordPress, go to **Plugins → Add New → Upload Plugin** and activate Hashe Elementor ACF Editor.
+4. Ensure Elementor and ACF (ACF Pro for repeaters) are active.
+5. Create an ACF field group with location rules matching the page or post you want to edit.
+6. Open that document in Elementor, choose **Page Settings → ACF**, edit its values, and click **Save ACF Fields**.
 
-**Important:** Saving ACF field values is separate from Elementor's main Update/Publish button.
+**ACF saving is separate from Elementor's Update/Publish operation.** Elementor layout changes still use Elementor's normal save workflow.
 
-## How it works
+## Why this integration matters
 
-The plugin hooks Elementor document control registration and adds a native ACF field control section. It uses ACF's own rendering and input scripts to initialize complex controls.
+Elementor 4 resets the WordPress script/style registries when initializing its editor. ACF registers its native field assets earlier, on WordPress init. Without re-registering ACF's actual assets after Elementor's reset, forms may look correct but image selectors, repeaters, and other dynamic ACF controls are unresponsive.
 
-Only ACF fields belonging to location-matched groups are accepted by a dedicated authenticated WordPress AJAX endpoint. The endpoint checks post edit permissions, a per-document nonce, ACF validation errors, and uses ACF's official save pathway.
+This plugin restores ACF core and Pro asset registration within Elementor, initializes ACF field objects inside the dynamic Page Settings panel, and invokes ACF's standard value-saving functions. The field behavior remains under ACF's ownership.
 
-## QA and known limitations
+## Browser acceptance on Solutions Moco
 
-- **Passed:** Native sidebar rendering without iframe, ACF group scoping, value persistence, repeater backend save, required-field validation, permission enforcement, nonce rejection, and field-key allowlisting.
-- **Passed:** User visual inspection of the actual Elementor Page Settings interface on Solutions Moco.
-- **Still to confirm interactively:** Opening and choosing an image in the ACF media picker, using Add Row/Delete Row on a repeater, and saving those values entirely through the browser.
-- Third-party ACF controls may require additional CSS/JS adjustments. Validate them on a staging site before using the plugin in production.
-- This version deliberately stays a **pre-release** until complete interactive browser checks are accepted.
+The following operations were run in an isolated authenticated Chrome browser on the actual Elementor editor:
 
-## Contributing
+| Test | Result |
+|---|---|
+| ACF tab icon and native field rendering | Passed |
+| Add a blank repeater row | Passed |
+| Edit and save nested repeater field values | Passed |
+| Drag a row to reorder and retain its position after reload | Passed |
+| Open ACF image picker, switch to Media Library and select an existing image | Passed |
+| Save and persist text, image and repeater data after reopening Elementor | Passed |
+| Remove a row with ACF's native confirmation and persist the deletion | Passed |
+| Clear ACF's stale unsaved-changes prompt after successful AJAX save | Passed |
+| Restore QA test data and return test page to draft | Passed |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Do not include private website data, customer content, or proprietary ACF Pro source in contributions.
+See [QA.md](QA.md) for scope and limitations. Native WYSIWYG, third-party field types and every Elementor/ACF version combination have **not** been exhaustively tested; this remains a pre-release for broader community testing.
 
-## License
+## Security and maintenance
+
+Only authenticated users with WordPress edit permission for the specific document can submit changes. Server-side saves validate a document-specific WordPress nonce and accept only top-level field keys from ACF groups assigned to that document. ACF handles its own field validation and type-specific storage.
+
+When installing on a new WordPress version or with third-party custom fields, first test on staging and report any compatibility issues through GitHub Issues.
+
+The plugin does not alter existing ACF field-group definitions or Elementor templates. ACF repeater Table layouts are **shown as stacked blocks in Elementor's narrow sidebar only**; their saved ACF settings remain unchanged.
+
+## License and contribution
 
 [GPL-2.0-or-later](LICENSE). Copyright Hashe Computer Solutions.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Do not submit customer content, private URLs, credentials, or proprietary plugin files.

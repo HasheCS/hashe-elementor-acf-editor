@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hashe Elementor ACF Editor
  * Description: Edit context-matched ACF field groups directly within Elementor Page Settings — no iframe or WordPress admin toolbar.
- * Version: 0.2.0-rc.1
+ * Version: 0.3.1-rc.1
  * Author: Hashe Computer Solutions
  * Author URI: https://hashe.com/
  * License: GPL-2.0-or-later
@@ -14,7 +14,7 @@
 defined( 'ABSPATH' ) || exit;
 
 final class Hashe_Elementor_ACF_Editor {
-    const VERSION = '0.2.0-rc.1';
+    const VERSION = '0.3.1-rc.1';
     const TAB_ID = 'heae_acf';
     const NONCE_ACTION = 'heae_save_acf_';
     private static $instance;
@@ -55,10 +55,21 @@ final class Hashe_Elementor_ACF_Editor {
     }
 
     public function register_tab() {
-        \Elementor\Controls_Manager::add_tab(
-            self::TAB_ID,
-            esc_html__( 'ACF', 'hashe-elementor-acf-editor' )
-        );
+        // Elementor renders this label using its own documented tab template
+        // (triple-brace title markup). Register the official ACF icon WITH
+        // the label instead of adding it after Elementor mounts the sidebar.
+        $logo = function_exists( 'acf_get_setting' )
+            ? set_url_scheme(
+                trailingslashit( acf_get_setting( 'url' ) ) . 'assets/images/acf-logo.svg',
+                wp_parse_url( admin_url(), PHP_URL_SCHEME )
+            )
+            : '';
+        $label = esc_html__( 'ACF', 'hashe-elementor-acf-editor' );
+        if ( $logo ) {
+            $label = '<img class="heae-acf-tab-logo" src="' . esc_url( $logo ) .
+                '" width="18" height="18" alt="" aria-hidden="true" />' . $label;
+        }
+        \Elementor\Controls_Manager::add_tab( self::TAB_ID, $label );
     }
 
     private function get_post_id( $document ) {
@@ -106,6 +117,7 @@ final class Hashe_Elementor_ACF_Editor {
         }
 
         $fields = $this->matching_fields( $post_id );
+        $groups = $this->matching_groups( $post_id );
         $markup = '<div class="heae-native-panel" data-post-id="' . esc_attr( $post_id ) . '" data-heae-nonce="' . esc_attr( wp_create_nonce( self::NONCE_ACTION . $post_id ) ) . '" data-heae-version="' . esc_attr( self::VERSION ) . '">';
         if ( empty( $fields ) ) {
             $markup .= '<div class="heae-empty-state"><span class="eicon-database" aria-hidden="true"></span>';
@@ -114,11 +126,28 @@ final class Hashe_Elementor_ACF_Editor {
             $markup .= '<p class="heae-panel-intro">' .
                 esc_html__( 'Edit the custom fields assigned to this page.', 'hashe-elementor-acf-editor' ) . '</p>';
             $markup .= '<form class="heae-acf-form acf-form" data-post-id="' . esc_attr( $post_id ) . '" autocomplete="off">';
-            $markup .= '<div class="acf-fields -top">';
-            ob_start();
-            acf_render_fields( array_values( $fields ), $post_id, 'div', 'label' );
-            $markup .= ob_get_clean();
-            $markup .= '</div>';
+            foreach ( $groups as $group ) {
+                $group_fields = acf_get_fields( $group );
+                if ( ! is_array( $group_fields ) || ! $group_fields ) {
+                    continue;
+                }
+                // ACF's Table layout is too wide for Elementor's narrow
+                // editor sidebar. Change only the rendered copy; do not
+                // modify the saved ACF group or repeater configuration.
+                foreach ( $group_fields as &$field ) {
+                    if ( isset( $field['type'] ) && 'repeater' === $field['type'] ) {
+                        $field['layout'] = 'block';
+                    }
+                }
+                unset( $field );
+                $markup .= '<section class="heae-field-group">';
+                $markup .= '<h4 class="heae-field-group-title">' . esc_html( $group['title'] ) . '</h4>';
+                $markup .= '<div class="acf-fields -top">';
+                ob_start();
+                acf_render_fields( $group_fields, $post_id, 'div', 'label' );
+                $markup .= ob_get_clean();
+                $markup .= '</div></section>';
+            }
             $markup .= '<div class="heae-form-actions">';
             $markup .= '<button type="button" class="elementor-button elementor-button-success heae-save">' .
                 esc_html__( 'Save ACF Fields', 'hashe-elementor-acf-editor' ) . '</button>';
@@ -140,19 +169,73 @@ final class Hashe_Elementor_ACF_Editor {
         $document->end_controls_section();
     }
 
+    /**
+     * Elementor 4 resets the global WP_Scripts and WP_Styles registries
+     * before its editor enqueue hooks run. ACF registers its assets on init,
+     * so the handles silently disappear unless we re-register them here.
+     * Restore ACF's own core asset registry, and the ACF Pro handlers needed
+     * for native repeater, gallery and flexible-content controls.
+     */
+    private function register_acf_editor_assets() {
+        if ( ! function_exists( 'acf_get_instance' ) || ! class_exists( 'ACF_Assets' ) ||
+             ! function_exists( 'acf_get_url' ) ) {
+            return;
+        }
+        if ( ! wp_script_is( 'acf-input', 'registered' ) || ! wp_style_is( 'acf-input', 'registered' ) ) {
+            acf_get_instance( 'ACF_Assets' )->register_scripts();
+        }
+
+        if ( class_exists( 'acf_pro' ) ) {
+            $suffix  = defined( 'ACF_DEVELOPMENT_MODE' ) && ACF_DEVELOPMENT_MODE ? '' : '.min';
+            $version = acf_get_setting( 'version' );
+            if ( ! wp_script_is( 'acf-pro-input', 'registered' ) ) {
+                wp_register_script(
+                    'acf-pro-input',
+                    acf_get_url( 'assets/build/js/pro/acf-pro-input' . $suffix . '.js' ),
+                    array( 'acf-input' ),
+                    $version,
+                    true
+                );
+            }
+            if ( ! wp_style_is( 'acf-pro-input', 'registered' ) ) {
+                wp_register_style(
+                    'acf-pro-input',
+                    acf_get_url( 'assets/build/css/pro/acf-pro-input' . $suffix . '.css' ),
+                    array( 'acf-input' ),
+                    $version
+                );
+            }
+        }
+    }
+
     public function enqueue_editor_scripts() {
+        $this->register_acf_editor_assets();
         if ( function_exists( 'acf_enqueue_scripts' ) ) {
-            acf_enqueue_scripts();
+            acf_enqueue_scripts( array( 'input' => true, 'uploader' => true ) );
+            // The normal ACF admin_enqueue_scripts event may already have
+            // passed before Elementor reset WordPress's asset registry.
+            // Reapply the core/Pro queue and localization after that reset.
+            acf_get_instance( 'ACF_Assets' )->enqueue_scripts();
+        }
+        // Elementor Page Settings is not ACF's normal edit screen, so
+        // its 'acf/input/admin_enqueue_scripts' hook does not run.
+        // Explicitly load Pro's repeater/flexible-content field handlers.
+        if ( wp_script_is( 'acf-pro-input', 'registered' ) ) {
+            wp_enqueue_script( 'acf-pro-input' );
         }
         wp_enqueue_media();
         wp_enqueue_script(
             'heae-acf-native-editor',
-            plugins_url( 'assets/editor-native.js', __FILE__ ),
-            array( 'jquery', 'acf-input' ),
+            set_url_scheme( plugins_url( 'assets/editor-native.js', __FILE__ ), 'https' ),
+            array( 'jquery', 'acf-input', 'acf-pro-input' ),
             self::VERSION,
             true
         );
+        $acf_logo_url = function_exists( 'acf_get_setting' )
+            ? set_url_scheme( trailingslashit( acf_get_setting( 'url' ) ) . 'assets/images/acf-logo.svg', wp_parse_url( admin_url(), PHP_URL_SCHEME ) )
+            : '';
         wp_localize_script( 'heae-acf-native-editor', 'HEAE', array(
+            'acfLogo' => esc_url( $acf_logo_url ),
             'ajax' => admin_url( 'admin-ajax.php' ),
             'action' => 'heae_save_acf',
             'saving' => __( 'Saving…', 'hashe-elementor-acf-editor' ),
@@ -163,9 +246,16 @@ final class Hashe_Elementor_ACF_Editor {
     }
 
     public function enqueue_editor_styles() {
+        $this->register_acf_editor_assets();
+        if ( wp_style_is( 'acf-input', 'registered' ) ) {
+            wp_enqueue_style( 'acf-input' );
+        }
+        if ( wp_style_is( 'acf-pro-input', 'registered' ) ) {
+            wp_enqueue_style( 'acf-pro-input' );
+        }
         wp_enqueue_style(
             'heae-acf-native-editor',
-            plugins_url( 'assets/editor-native.css', __FILE__ ),
+            set_url_scheme( plugins_url( 'assets/editor-native.css', __FILE__ ), 'https' ),
             array(),
             self::VERSION
         );
