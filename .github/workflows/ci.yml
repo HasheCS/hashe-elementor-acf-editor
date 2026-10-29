@@ -1,0 +1,41 @@
+name: Hashe Elementor ACF Editor CI
+
+on:
+  push:
+    branches: ['main', 'feature/**', 'fix/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: none
+      - name: PHP syntax
+        run: |
+          php -l hashe-elementor-acf-editor.php
+          php -l tests/php-smoke.php
+      - name: Native ACF and security regression tests
+        run: php tests/php-smoke.php
+
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate editor JavaScript
+        run: |
+          node --check assets/editor-native.js
+          node tests/js-smoke.cjs
