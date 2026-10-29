@@ -1,0 +1,32 @@
+/* Editor integration guardrails: prevent reintroducing an iframe or unsafe save path. */
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const main = fs.readFileSync(path.join(__dirname, '..', 'hashe-elementor-acf-editor.php'), 'utf8');
+const js = fs.readFileSync(path.join(__dirname, '..', 'assets/editor-native.js'), 'utf8');
+const css = fs.readFileSync(path.join(__dirname, '..', 'assets/editor-native.css'), 'utf8');
+
+assert.doesNotMatch(main, /<iframe|tools\.php|add_management_page/);
+assert.doesNotMatch(js, /<iframe|tools\.php/);
+assert.match(main, /acf_render_fields/);
+assert.match(main, /acf_save_post/);
+assert.match(main, /check_ajax_referer/);
+assert.match(main, /current_user_can\s*\(\s*'edit_post'/);
+assert.match(main, /matching_fields\s*\(/);
+assert.match(main, /array_key_exists/);
+assert.match(main, /wp_send_json_error/);
+assert.match(main, /wp_enqueue_media/);
+assert.match(main, /acf_enqueue_scripts/);
+assert.match(js, /MutationObserver/);
+assert.match(js, /window\.acf\.doAction\('append'/);
+assert.match(js, /serializeArray/);
+assert.match(js, /\bpost_id:\s*postId/);
+assert.match(js, /nonce:\s*nonce/);
+assert.match(js, /heae-native-panel/);
+assert.match(css, /\.elementor-panel\s+\.heae-acf-form/);
+
+console.log('PASS iframe-free Elementor native panel and field rendering.');
+console.log('PASS AJAX save validation and permission guardrails.');
+console.log('PASS field script initialization and scoped editor CSS.');
+console.log('PASS editor code has no legacy iframe integration.');
