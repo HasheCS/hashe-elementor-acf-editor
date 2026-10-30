@@ -45,3 +45,36 @@ jobs:
           node --check tests/dirty-save.cjs
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
+
+  wporg-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify WordPress.org submission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLUGIN=hashe-elementor-acf-editor
+          mkdir -p "dist/$PLUGIN/assets" "dist/$PLUGIN/includes"
+          cp hashe-elementor-acf-editor.php readme.txt LICENSE "dist/$PLUGIN/"
+          cp assets/editor-native.js assets/editor-native.css "dist/$PLUGIN/assets/"
+          cp includes/extended-fields.php "dist/$PLUGIN/includes/"
+          ( cd dist && zip -q -r "$PLUGIN-submission-candidate.zip" "$PLUGIN" )
+          unzip -tq "dist/$PLUGIN-submission-candidate.zip"
+          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/hashe-elementor-acf-editor.php"
+          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/readme.txt"
+          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/LICENSE"
+          if unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Eq '/(README\.md|QA\.md)$'; then
+            echo 'FAIL: development-only markdown leaked into installable ZIP'
+            exit 1
+          fi
+          echo 'PASS: Installable package structure and development-file exclusions'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acf-editor-wporg-submission-candidate
+          path: dist/hashe-elementor-acf-editor-submission-candidate.zip
+          if-no-files-found: error
+      - name: WordPress.org Plugin Check on actual distribution directory
+        uses: WordPress/plugin-check-action@v1
+        with:
+          build-dir: dist/hashe-elementor-acf-editor
