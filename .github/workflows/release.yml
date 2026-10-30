@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           PLUGIN=hashe-elementor-acf-editor
           mkdir -p "dist/$PLUGIN/assets" "dist/$PLUGIN/includes"
-          cp hashe-elementor-acf-editor.php readme.txt README.md QA.md LICENSE "dist/$PLUGIN/"
+          cp hashe-elementor-acf-editor.php readme.txt LICENSE "dist/$PLUGIN/"
           cp assets/editor-native.js assets/editor-native.css "dist/$PLUGIN/assets/"
           cp includes/extended-fields.php "dist/$PLUGIN/includes/"
           (
