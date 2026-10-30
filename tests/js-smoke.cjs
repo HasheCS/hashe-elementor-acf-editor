@@ -13,7 +13,8 @@ const version = php.match(/^\s*\*\s*Version:\s*(\d+\.\d+\.\d+)\s*$/m)?.[1];
 assert.ok(version, 'Plugin PHP header must declare a semantic version');
 const versionPattern = version.replace(/\./g, '\\.');
 assert.match(php, new RegExp("const VERSION = '" + versionPattern + "';"));
-assert.match(readme, new RegExp('^Stable tag:\\s*' + versionPattern + '\\s*
+assert.ok(readme.split(String.fromCharCode(10)).includes('Stable tag: ' + version));
+assert.match(readme, /Tested up to:\s*\d+\.\d+/);
 assert.match(php, /Author: Hashe Computer Solutions \(Pvt\) Ltd/);
 assert.match(php, /License: GPL-2\.0-or-later/);
 assert.match(php, /https:\/\/www\.hashe\.com\//);
