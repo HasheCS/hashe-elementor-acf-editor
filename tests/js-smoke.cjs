@@ -9,9 +9,12 @@ const js = fs.readFileSync(path.join(__dirname, '..', 'assets/editor-native.js')
 const css = fs.readFileSync(path.join(__dirname, '..', 'assets/editor-native.css'), 'utf8');
 const readme = fs.readFileSync(path.join(__dirname, '..', 'readme.txt'), 'utf8');
 
-assert.match(php, /Version:\s*0\.5\.0\b/);
-assert.match(php, /const VERSION = '0\.5\.0';/);
-assert.match(readme, /Stable tag:\s*0\.5\.0/);
+const version = php.match(/^\s*\*\s*Version:\s*(\d+\.\d+\.\d+)\s*$/m)?.[1];
+assert.ok(version, 'Plugin PHP header must declare a semantic version');
+const versionPattern = version.replace(/\./g, '\\.');
+assert.match(php, new RegExp("const VERSION = '" + versionPattern + "';"));
+assert.ok(readme.split(String.fromCharCode(10)).includes('Stable tag: ' + version));
+assert.match(readme, /Tested up to:\s*\d+\.\d+/);
 assert.match(php, /Author: Hashe Computer Solutions \(Pvt\) Ltd/);
 assert.match(php, /License: GPL-2\.0-or-later/);
 assert.match(php, /https:\/\/www\.hashe\.com\//);
@@ -37,7 +40,7 @@ assert.match(extended, /'relationship'/);
 assert.match(extended, /'google_map'/);
 assert.match(css, /\.elementor-control-heae_acf_save_action/);
 assert.doesNotMatch(js, /0\.5\.0-qa\.14/);
-console.log('PASS v0.5.0 GPL / Hashe metadata and license guardrails');
+console.log(`PASS v${version} GPL / Hashe metadata and license guardrails`);
 console.log('PASS Elementor-native controls and bottom save UI without iframe');
 console.log('PASS ACF field scope, nonce, validation, and changed-field-only save');
 console.log('PASS advanced field adapters and ACF source-of-truth separation');

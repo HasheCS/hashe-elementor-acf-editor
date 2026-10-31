@@ -3,7 +3,8 @@ Contributors: hashe
 Tags: elementor, acf, acf pro, custom fields, page settings
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Tested up to: 7.1
+Stable tag: 0.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -50,6 +51,11 @@ No. The supported scope is built-in ACF and ACF Pro field types.
 No. Elementor's main Update/Publish action is separate.
 
 == Changelog ==
+
+= 0.5.1 =
+* WordPress.org submission-readiness: translator context and dependency notice improvements.
+* Document verified WordPress 7.1 testing and review ACF input/nonce safety annotations.
+* Streamline release ZIP to exclude development-only documentation.
 
 = 0.5.0 =
 * First stable public build following user acceptance of the 36 built-in ACF/ACF Pro field-type QA matrix.

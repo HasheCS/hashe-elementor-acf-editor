@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hashe Elementor ACF Editor
  * Description: Native Elementor Page Settings controls backed by ACF fields. No iframe or embedded ACF form.
- * Version: 0.5.0
+ * Version: 0.5.1
  * Author: Hashe Computer Solutions (Pvt) Ltd
  * Author URI: https://www.hashe.com/
  * Plugin URI: https://github.com/HasheCS/hashe-elementor-acf-editor
@@ -17,7 +17,7 @@ require_once __DIR__ . '/includes/extended-fields.php';
 
 final class Hashe_Elementor_ACF_Editor {
     use Hashe_ACF_Extended_Controls;
-    const VERSION = '0.5.0';
+    const VERSION = '0.5.1';
     const TAB_ID = 'heae_acf';
     const CONTROL_PREFIX = 'heae_acf_';
     const NONCE_ACTION = 'heae_save_acf_';
@@ -56,7 +56,7 @@ final class Hashe_Elementor_ACF_Editor {
     public function dependency_notice() {
         if ( current_user_can( 'activate_plugins' ) ) {
             echo '<div class="notice notice-error"><p>' .
-                esc_html__( 'Hashe Elementor ACF Editor requires Elementor and Advanced Custom Fields Pro.', 'hashe-elementor-acf-editor' ) .
+                esc_html__( 'Hashe Elementor ACF Editor requires Elementor and Advanced Custom Fields (ACF or ACF Pro).', 'hashe-elementor-acf-editor' ) .
                 '</p></div>';
         }
     }
@@ -264,6 +264,7 @@ final class Hashe_Elementor_ACF_Editor {
                 $args['type'] = \Elementor\Controls_Manager::REPEATER;
                 $args['fields'] = $repeater->get_controls();
                 $args['title_field'] = '{{{ ' . $names[0] . ' }}}';
+                /* translators: %s: Label of the ACF repeater field. */
                 $args['button_text'] = sprintf( __( 'Add %s', 'hashe-elementor-acf-editor' ), $label );
                 $args['prevent_empty'] = false;
                 $args['item_actions'] = array( 'add' => true, 'duplicate' => true, 'remove' => true, 'sort' => true );
@@ -344,6 +345,7 @@ final class Hashe_Elementor_ACF_Editor {
                         'type' => \Elementor\Controls_Manager::ALERT,
                         'alert_type' => 'warning',
                         'content' => sprintf(
+                            /* translators: %s: Label of an unsupported ACF field. */
                             __( '%s uses an ACF field type not yet mapped to Elementor controls. Its value will not be changed.', 'hashe-elementor-acf-editor' ),
                             esc_html( $field['label'] )
                         ),
@@ -369,6 +371,7 @@ final class Hashe_Elementor_ACF_Editor {
     }
 
     public function enqueue_editor_scripts() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Elementor editor context. This function does not change data; writes use a document-specific AJAX nonce.
         $post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
         $schema = array();
         if ( $post_id && current_user_can( 'edit_post', $post_id ) ) {
@@ -485,6 +488,7 @@ final class Hashe_Elementor_ACF_Editor {
             wp_send_json_error( array( 'message' => __( 'ACF is unavailable.', 'hashe-elementor-acf-editor' ) ), 503 );
         }
         $allowed = $this->matching_fields( $post_id );
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve typed/nested ACF values; post capability, nonce, field-key allowlist, ACF validation and ACF's native save-time sanitization apply.
         $raw = isset( $_POST['acf'] ) && is_array( $_POST['acf'] ) ? wp_unslash( $_POST['acf'] ) : array();
         $payload = array();
         foreach ( $allowed as $key => $field ) {

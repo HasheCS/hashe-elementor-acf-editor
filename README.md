@@ -4,7 +4,7 @@
 
 Edit the Advanced Custom Fields assigned to a page or post from **Elementor → Page Settings → ACF**. The controls belong to Elementor's sidebar; no WordPress editing screen, embedded ACF form, or iframe is used.
 
-**Current release: v0.5.0** · **License: [GNU GPL v2 or later](LICENSE) (`GPL-2.0-or-later`)**
+**Current release: v0.5.1** · **License: [GNU GPL v2 or later](LICENSE) (`GPL-2.0-or-later`)**
 
 ## Features
 
@@ -31,7 +31,7 @@ No ACF Pro, Elementor Pro or other proprietary licensed plugin files, license ke
 ## Install
 
 1. Back up the target WordPress website and preferably test in staging first.
-2. Download the **versioned plugin ZIP** from [GitHub Releases](https://github.com/HasheCS/hashe-elementor-acf-editor/releases), for example `hashe-elementor-acf-editor-v0.5.0.zip`. Do **not** use GitHub's automatic "Source code (zip)" for installation.
+2. Download the **versioned plugin ZIP** from [GitHub Releases](https://github.com/HasheCS/hashe-elementor-acf-editor/releases), for example `hashe-elementor-acf-editor-v0.5.1.zip`. Do **not** use GitHub's automatic "Source code (zip)" for installation.
 3. In WordPress go to **Plugins → Add New Plugin → Upload Plugin**. Select the versioned ZIP, install, and activate it.
 4. Ensure Elementor and ACF are active; activate ACF Pro for its Pro-only fields.
 5. Create or use an ACF field group assigned to the page or post you wish to edit.
