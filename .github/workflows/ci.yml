@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           python3 tests/distribution-test.py
           python3 tools/build_distributions.py --output dist-candidate
-          unzip -q dist-candidate/hashe-field-editor-for-elementor-with-acf-v0.6.0-wporg.zip -d dist-candidate/wporg-check
+          unzip -q dist-candidate/hashe-field-editor-v0.6.0-wporg.zip -d dist-candidate/wporg-check
           unzip -tq dist-candidate/hashe-elementor-acf-editor-v0.6.0.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -76,4 +76,4 @@ jobs:
       - name: WordPress.org Plugin Check on directory-only package
         uses: WordPress/plugin-check-action@v1
         with:
-          build-dir: dist-candidate/wporg-check/hashe-field-editor-for-elementor-with-acf
+          build-dir: dist-candidate/wporg-check/hashe-field-editor
