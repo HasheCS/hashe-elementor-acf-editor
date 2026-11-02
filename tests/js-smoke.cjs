@@ -15,6 +15,8 @@ const versionPattern = version.replace(/\./g, '\\.');
 assert.match(php, new RegExp("const VERSION = '" + versionPattern + "';"));
 assert.ok(readme.split(String.fromCharCode(10)).includes('Stable tag: ' + version));
 assert.match(readme, /Tested up to:\s*\d+\.\d+/);
+assert.match(php, /Requires Plugins:\\s*elementor, advanced-custom-fields/);
+assert.match(readme, /^Requires Plugins: elementor, advanced-custom-fields$/m);
 assert.match(php, /Author: Hashe Computer Solutions \(Pvt\) Ltd/);
 assert.match(php, /License: GPL-2\.0-or-later/);
 assert.match(php, /https:\/\/www\.hashe\.com\//);
