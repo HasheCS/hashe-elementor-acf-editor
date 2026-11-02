@@ -26,6 +26,9 @@ jobs:
           set -euo pipefail
           php -l hashe-elementor-acf-editor.php
           php -l includes/extended-fields.php
+          php -l distribution/independent/bootstrap.php
+          php -l distribution/independent/hashe-core/v1/update-client.php
+          php -l distribution/independent/hashe-core/v1/consent-client.php
           php -l tests/php-smoke.php
       - name: WordPress / Elementor / ACF standalone security tests
         run: php tests/php-smoke.php
@@ -46,35 +49,25 @@ jobs:
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
 
-  wporg-candidate:
+  distribution-candidates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build and verify WordPress.org submission candidate
-        shell: bash
+      - name: Verify both isolated candidate packages and hashes
         run: |
           set -euo pipefail
-          PLUGIN=hashe-elementor-acf-editor
-          mkdir -p "dist/$PLUGIN/assets" "dist/$PLUGIN/includes"
-          cp hashe-elementor-acf-editor.php readme.txt LICENSE "dist/$PLUGIN/"
-          cp assets/editor-native.js assets/editor-native.css "dist/$PLUGIN/assets/"
-          cp includes/extended-fields.php "dist/$PLUGIN/includes/"
-          ( cd dist && zip -q -r "$PLUGIN-submission-candidate.zip" "$PLUGIN" )
-          unzip -tq "dist/$PLUGIN-submission-candidate.zip"
-          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/hashe-elementor-acf-editor.php"
-          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/readme.txt"
-          unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Fqx "$PLUGIN/LICENSE"
-          if unzip -Z1 "dist/$PLUGIN-submission-candidate.zip" | grep -Eq '/(README\.md|QA\.md)$'; then
-            echo 'FAIL: development-only markdown leaked into installable ZIP'
-            exit 1
-          fi
-          echo 'PASS: Installable package structure and development-file exclusions'
+          python3 tests/distribution-test.py
+          python3 tools/build_distributions.py --output dist-candidate
+          unzip -q dist-candidate/hashe-field-editor-for-elementor-with-acf-v0.6.0-wporg.zip -d dist-candidate/wporg-check
+          unzip -tq dist-candidate/hashe-elementor-acf-editor-v0.6.0.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: acf-editor-wporg-submission-candidate
-          path: dist/hashe-elementor-acf-editor-submission-candidate.zip
+          name: acf-v0.6.0-unpublished-candidate-packages
+          path: |
+            dist-candidate/*.zip
+            dist-candidate/SHA256SUMS.txt
           if-no-files-found: error
-      - name: WordPress.org Plugin Check on actual distribution directory
+      - name: WordPress.org Plugin Check on directory-only package
         uses: WordPress/plugin-check-action@v1
         with:
-          build-dir: dist/hashe-elementor-acf-editor
+          build-dir: dist-candidate/wporg-check/hashe-field-editor-for-elementor-with-acf
