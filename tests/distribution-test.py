@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         assert "'allowed'" in consent and "'revocation-pending'" in consent
         assert "hashe_acf_optional_reporting" in consent
         assert "Hashe Font Awesome" not in consent
-        assert GITHUB_SLUG + ".php" in main
+        assert f"{GITHUB_SLUG}/{GITHUB_SLUG}.php" in entries
         assert z.testzip() is None
         assert all(x.startswith(GITHUB_SLUG + "/") for x in entries)
     manifest = (folder / "SHA256SUMS.txt").read_text()
