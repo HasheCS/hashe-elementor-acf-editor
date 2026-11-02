@@ -23,6 +23,9 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         main = z.read(f"{ORG_SLUG}/{ORG_SLUG}.php").decode()
         readme = z.read(f"{ORG_SLUG}/readme.txt").decode()
         extended = z.read(f"{ORG_SLUG}/includes/extended-fields.php").decode()
+        assert "Plugin Name: Hashe Field Editor" in main
+        assert readme.startswith("=== Hashe Field Editor ===")
+        assert ORG_SLUG == "hashe-field-editor"
         assert "Text Domain: " + ORG_SLUG in main
         assert "Requires Plugins: elementor, advanced-custom-fields" in main
         assert "Update URI:" not in main
