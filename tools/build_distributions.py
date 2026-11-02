@@ -67,13 +67,20 @@ def contents(distribution: str) -> dict[str, bytes]:
             if not standalone:
                 # WordPress.org owns its native updates. No Update URI or
                 # custom update module may enter this package.
-                data = data.replace(GITHUB_SLUG, ORG_SLUG)
+                if relative.endswith(".php"):
+                    # Change gettext text-domain constants, not the GitHub
+                    # source URL or unrelated persistent setting names.
+                    data = data.replace("'" + GITHUB_SLUG + "'", "'" + ORG_SLUG + "'")
+                    data = data.replace(
+                        " * Text Domain: " + GITHUB_SLUG,
+                        " * Text Domain: " + ORG_SLUG
+                    )
                 if relative == ENTRY:
                     output_path = ORG_SLUG + ".php"
                 if relative == "readme.txt":
                     data = data.replace(
                         "2. Download the versioned installable ZIP from https://github.com/HasheCS/"
-                        + ORG_SLUG + "/releases (not the automatic source ZIP).",
+                        + GITHUB_SLUG + "/releases (not the automatic source ZIP).",
                         "2. Install via WordPress.org Plugins > Add New once approved; "
                         "during review, install the directory candidate ZIP on staging."
                     )
