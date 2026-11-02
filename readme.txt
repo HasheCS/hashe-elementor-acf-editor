@@ -1,10 +1,11 @@
-=== Hashe Elementor ACF Editor ===
+=== Hashe Field Editor for Elementor with Advanced Custom Fields ===
 Contributors: hashe
 Tags: elementor, acf, acf pro, custom fields, page settings
-Requires at least: 5.8
+Requires at least: 6.5
+Requires Plugins: elementor, advanced-custom-fields
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 0.5.1
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -31,7 +32,7 @@ No ACF Pro, Elementor Pro or other proprietary paid components are bundled. Elem
 1. Back up the site and test on staging.
 2. Download the versioned installable ZIP from https://github.com/HasheCS/hashe-elementor-acf-editor/releases (not the automatic source ZIP).
 3. WordPress > Plugins > Add New Plugin > Upload Plugin, then activate.
-4. Activate Elementor and Advanced Custom Fields; use ACF Pro for Pro field types.
+4. Activate Elementor and Advanced Custom Fields; use ACF Pro 6.8.4+ when installing Pro alone to satisfy WordPress dependency handling. ACF Pro is needed for Pro-only field types.
 5. Create or use ACF field groups matching the page or post.
 6. Edit the document in Elementor > Page Settings > ACF.
 7. Modify fields and select Save ACF Fields. Save Elementor layout changes separately.
@@ -51,6 +52,11 @@ No. The supported scope is built-in ACF and ACF Pro field types.
 No. Elementor's main Update/Publish action is separate.
 
 == Changelog ==
+
+= 0.6.0 (release candidate, not published) =
+* Declare Elementor and Advanced Custom Fields as required WordPress plugins.
+* Prepare distinct WordPress.org and standalone distribution identities without changing Elementor/ACF editing behavior.
+* Independent update and privacy reporting clients are candidate-only, pending live service integration and approval.
 
 = 0.5.1 =
 * WordPress.org submission-readiness: translator context and dependency notice improvements.
