@@ -14,7 +14,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
-ORG_SLUG = "hashe-field-editor-for-elementor-with-acf"
+ORG_SLUG = "hashe-field-editor"
 GITHUB_SLUG = "hashe-elementor-acf-editor"
 ENTRY = GITHUB_SLUG + ".php"
 ALLOWED_FILES = (
