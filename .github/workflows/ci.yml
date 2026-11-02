@@ -30,8 +30,14 @@ jobs:
           php -l distribution/independent/hashe-core/v1/update-client.php
           php -l distribution/independent/hashe-core/v1/consent-client.php
           php -l tests/php-smoke.php
+          php -l tests/standalone-update-client.test.php
+          php -l tests/standalone-consent-client.test.php
       - name: WordPress / Elementor / ACF standalone security tests
-        run: php tests/php-smoke.php
+        run: |
+          set -euo pipefail
+          php tests/php-smoke.php
+          php tests/standalone-update-client.test.php
+          php tests/standalone-consent-client.test.php
 
   javascript:
     runs-on: ubuntu-latest
