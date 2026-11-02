@@ -8,15 +8,16 @@ Date: 2026-11-02. Scope: HasheCS/hashe-elementor-acf-editor only.
 - ACF/Elementor editor/save functionality is intentionally unchanged from v0.5.1. No site changes.
 - Minimum WordPress in this candidate: 6.5 (native dependency headers).
 - Dependencies: `elementor, advanced-custom-fields`. ACF Pro 6.8.4 or later advertises support for satisfying `advanced-custom-fields`; check older ACF Pro versions before claiming compatibility.
-- Working candidate name: **Hashe Field Editor for Elementor with Advanced Custom Fields**.
-- Proposed WordPress.org slug: `hashe-field-editor-for-elementor-with-acf`. Official slug reservation and uniqueness review are PENDING.
+- Working candidate name: **Hashe Field Editor**.
+- Proposed WordPress.org slug: `hashe-field-editor`. Public exact-slug lookup (2026-11-03): WordPress.org plugin information API returns HTTP 404 and public URL redirects to plugin search. This does NOT establish ownership/reservation; official slug reservation and reviewer approval remain PENDING.
 
-## Two distinct plugin identities from one audited codebase
+Directory subtitle/description: **Edit Advanced Custom Fields directly in Elementor Page Settings using native Elementor controls.** This explains the integration without putting third-party trademarks in the plugin name or slug.
+\n## Two distinct plugin identities from one audited codebase
 WordPress.org Plugin Directory guideline 8 and Plugin Check forbid a competing third-party updater. Therefore the two update identities MUST NOT share a slug or installation path.
 
 | Distribution | Directory/entrypoint | Updates | Contents |
 |---|---|---|---|
-| WordPress.org | `hashe-field-editor-for-elementor-with-acf/hashe-field-editor-for-elementor-with-acf.php` | WordPress.org core update service | Feature code + readme/LICENSE; no custom updater or telemetry client |
+| WordPress.org | `hashe-field-editor/hashe-field-editor.php` | WordPress.org core update service | Feature code + readme/LICENSE; no custom updater or telemetry client |
 | Independent | `hashe-elementor-acf-editor/hashe-elementor-acf-editor.php` | Hashe approved stable update metadata only, verified SHA-256 ZIP | Same feature code, isolated update client, default-off optional consent client |
 
 This **requires a documented exception/clarification** to HP-PLUG-001's literal “one identical ZIP” language: two separately verified immutable release artifacts, from the same approved source/version, with only distribution-specific headers and standalone service modules. The governing Google Doc has NOT been changed. Do not publish either variant until this is explicitly reconciled and authorized.
