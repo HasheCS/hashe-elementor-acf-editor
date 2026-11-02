@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Hashe Field Editor for Elementor with Advanced Custom Fields
+ * Plugin Name: Hashe Field Editor
  * Description: Native Elementor Page Settings controls backed by ACF fields. No iframe or embedded ACF form.
  * Version: 0.6.0
  * Author: Hashe Computer Solutions (Pvt) Ltd
