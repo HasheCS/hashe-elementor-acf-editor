@@ -1,4 +1,4 @@
-=== Hashe Field Editor for Elementor with Advanced Custom Fields ===
+=== Hashe Field Editor ===
 Contributors: hashe
 Tags: elementor, acf, acf pro, custom fields, page settings
 Requires at least: 6.5
