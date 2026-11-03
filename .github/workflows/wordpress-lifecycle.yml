@@ -112,6 +112,8 @@ jobs:
             php "$WP_BIN" plugin activate "$HASHE_QA_SLUG" --path="$WP_ROOT"
             php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-live-integration.php" --path="$WP_ROOT"
             if [[ "$QA_PHP" == '8.2' ]]; then
+              echo '=== REAL ELEMENTOR PAGE SETTINGS CONTROLS ACCEPTANCE ==='
+              HASHE_QA_EPHEMERAL=1 php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-elementor-controls-integration.php" --path="$WP_ROOT"
               echo '=== REAL WORDPRESS AJAX SAVE/SECURITY ACCEPTANCE ==='
               HASHE_QA_EPHEMERAL=1 python3 "$GITHUB_WORKSPACE/tests/check-wordpress-acf-ajax.py"
             fi
