@@ -67,3 +67,13 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
     print("PASS: independent package preserves old folder identity and adds checksum-gated updater")
     print("PASS: opt-in reporting stays separate from WordPress update requests")
     print("PASS: both ZIP files valid and SHA256 manifest agrees")
+
+release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+assert "workflow_dispatch:" in release_workflow
+assert "push:\n    tags:" not in release_workflow
+assert "refs/heads/main" in release_workflow
+assert "git rev-list -n 1" in release_workflow
+assert "gh release view" in release_workflow
+assert "python3 tools/build_distributions.py --output dist-release" in release_workflow
+assert "softprops/action-gh-release@v2" in release_workflow
+print("PASS: release workflow requires manual approval and independent ZIP builder")
