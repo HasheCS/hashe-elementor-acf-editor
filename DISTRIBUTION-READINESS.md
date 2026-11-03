@@ -12,7 +12,7 @@ Date: 2026-11-02. Scope: HasheCS/hashe-elementor-acf-editor only.
 - Proposed WordPress.org slug: `hashe-field-editor`. Public exact-slug lookup (2026-11-03): WordPress.org plugin information API returns HTTP 404 and public URL redirects to plugin search. This does NOT establish ownership/reservation; official slug reservation and reviewer approval remain PENDING.
 
 Directory subtitle/description: **Edit Advanced Custom Fields directly in Elementor Page Settings using native Elementor controls.** This explains the integration without putting third-party trademarks in the plugin name or slug.
-\n## Two distinct plugin identities from one audited codebase
+## Two distinct plugin identities from one audited codebase
 WordPress.org Plugin Directory guideline 8 and Plugin Check forbid a competing third-party updater. Therefore the two update identities MUST NOT share a slug or installation path.
 
 | Distribution | Directory/entrypoint | Updates | Contents |
@@ -24,8 +24,8 @@ This **requires a documented exception/clarification** to HP-PLUG-001's literal 
 
 ## Update status
 - Independent Update URI: `https://plugins.hashe.com/hashe-elementor-acf-editor/`.
-- Candidate update feed URL: `https://plugins.hashe.com/api/v1/plugins/hashe-elementor-acf-editor/update`.
-- URL selection is **a proposal**, not an assertion that an endpoint exists. HP-WEB-001 Phase 6 owns the actual production feed.
+- Candidate update feed URL: `https://plugins.hashe.com/api/v1/updates/hashe-elementor-acf-editor` (**corrected in draft**).
+- Read-only GET 2026-11-03: HTTP 200, stable v0.5.1 and matching GitHub ZIP/SHA256. The website currently returns `tested=null` and `requires_php=null`; strict updater validation therefore fails closed pending compatibility evidence and website-owned contract correction.
 - The inherited versioned update module compares SemVer, requires a stable/approved release manifest, pins the exact HasheCS GitHub ZIP path, checks its SHA-256 before handing it to WordPress, and does not send analytics data.
 - No silent release, auto-enable of WordPress autoupdate settings, fallback to unreviewed source or plugin migration.
 - The independent plugin folder/main basename intentionally remain identical to v0.5.1 for upgrades. Never install the WordPress.org and independent variant concurrently, since they implement the same PHP classes/controls. Coexistence and migration deserve explicit verification before publication.
@@ -51,7 +51,17 @@ This **requires a documented exception/clarification** to HP-PLUG-001's literal 
 `python3 tests/distribution-test.py`
 `python3 tools/build_distributions.py --output dist-candidate`
 
-GitHub CI builds and tests both ZIPs as ephemeral artifacts. DO NOT mistake CI artifacts for published stable releases. Current release.yml still targets legacy v0.5.1 directory identity; it must be redesigned and re-reviewed before ANY tag/publishing action for v0.6.0. Never create a v0.6.0 tag before that safety gate.
+GitHub CI builds and tests both ZIPs as ephemeral artifacts. DO NOT mistake CI artifacts for published stable releases. Draft release.yml is now manual-only (`workflow_dispatch`), with explicit approval, existing annotated stable tag matching `main`, and the independent ZIP builder. This candidate workflow has not been used to publish. Final workflow QA and company dual-package policy clarification remain blocking; do not tag until approved.
+
+## 2026-11-03 engineering and ownership checkpoint
+
+- WordPress.org owner-domain proof: TXT at hashe.com root with value `wordpressorg-hashe-verification` verified via 1.1.1.1, 8.8.8.8, kevin.quicns.com and jon.quicns.com. DNS evidence is ready; official reviewer acceptance remains pending.
+- Square icon master and 128px/256px versions are approved and checksum-locked in `BRAND-APPROVAL.md`; binary import and independent directory-banner approval remain outstanding.
+- Independent update route has been corrected in the draft bootstrap, with a package regression guard; the live feed serves v0.5.1 with incomplete compatibility metadata.
+- Disposable WordPress 7.1.4 integration workflow added: PHP 8.2/8.3, independent clean/v0.5.1 upgrade, WordPress.org clean installation, real Elementor and ACF Free, hooks, lifecycle and privacy checks. Do not mark any jobs PASS until GitHub Actions proves the exact candidate commit succeeded.
+- PHP 7.4 real install, ACF Pro, browser-level Elementor field save, all advanced types, standalone real update-now, and genuine opt-in/revoke backend remain distinct untested acceptance gates.
+- Draft release workflow requires manual approval; no tag, main merge, public ZIP, WordPress.org upload or site deployment occurred.
+- Release remains BLOCKED by real acceptance testing, owner-endpoint contract, optional reporting backend/privacy contract, HP-PLUG-001 two-artifact clarification, approved artwork import, final immutable ZIP and explicit CEO release approval.
 
 ## Rollback and scope
 No runtime site changes. Rollback is close the draft PR or delete only this isolated candidate branch after approval. Published v0.5.1 ZIP, protected main, WordPress.org submission and plugins.hashe.com remain unchanged.
