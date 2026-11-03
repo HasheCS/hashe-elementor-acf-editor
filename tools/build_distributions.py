@@ -11,7 +11,7 @@ import argparse
 import hashlib
 import re
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
 ORG_SLUG = "hashe-field-editor"
@@ -129,9 +129,17 @@ def build(out: Path) -> None:
         if target.exists():
             raise FileExistsError(f"Refusing to overwrite existing candidate: {target}")
         payload = contents(kind)
-        with ZipFile(target, "w", ZIP_DEFLATED) as archive:
+        # Reproducible ZIP identity is a release requirement. ZipFile.writestr
+        # with a string name inserts the current clock time into each entry;
+        # identical source then produces different ZIP checksums. Pin entry
+        # metadata, file mode, ordering and compression deterministically.
+        with ZipFile(target, "w", ZIP_DEFLATED, compresslevel=9) as archive:
             for entry, data in sorted(payload.items()):
-                archive.writestr(entry, data)
+                info = ZipInfo(entry, date_time=(1980, 1, 1, 0, 0, 0))
+                info.create_system = 3  # Unix metadata, independent of builder OS.
+                info.external_attr = 0o100644 << 16
+                info.compress_type = ZIP_DEFLATED
+                archive.writestr(info, data, compress_type=ZIP_DEFLATED, compresslevel=9)
         with ZipFile(target) as archive:
             if archive.testzip() is not None:
                 raise ValueError("Corrupted candidate archive")
