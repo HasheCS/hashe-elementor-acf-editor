@@ -35,6 +35,8 @@ jobs:
           php -l tests/wordpress-live-integration.php
           php -l tests/wordpress-native-update-simulation.php
           php -l tests/wordpress-consent-live-integration.php
+          php -l tests/wordpress-acf-ajax-integration.php
+          python3 -m py_compile tests/check-wordpress-acf-ajax.py
       - name: WordPress / Elementor / ACF standalone security tests
         run: |
           set -euo pipefail
