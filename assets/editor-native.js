@@ -195,13 +195,26 @@
     }
 
     $(function () {
-        var tries = 0;
-        var timer = window.setInterval(function () {
-            tries++;
-            if (captureBaseline() || tries >= 600) {
-                window.clearInterval(timer);
-            }
-        }, 100);
+        // Elementor may mount the ACF Page Settings panel long after the editor
+        // itself loads. A fixed 60-second timeout previously disabled saving
+        // permanently if the administrator opened ACF later. Keep observing
+        // until the original rendered field values are safely captured.
+        var observer = null;
+        var timer = null;
+        function tryCapture() {
+            if (!captureBaseline()) return;
+            if (observer) observer.disconnect();
+            if (timer !== null) window.clearInterval(timer);
+        }
+        if (typeof window.MutationObserver === 'function' && document.body) {
+            observer = new window.MutationObserver(tryCapture);
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+        // Also cover Backbone model population without a DOM mutation and
+        // browsers where MutationObserver is unavailable. This is a lightweight
+        // one-second check and stops once the baseline is captured.
+        timer = window.setInterval(tryCapture, 1000);
+        tryCapture();
     });
 
     function status(message, isError) {
