@@ -55,6 +55,11 @@ if ( $missing ) {
     WP_CLI::error( 'Field Editor native controls missing: ' . implode( ', ', $missing ) );
 }
 $button = $registered['heae_acf_save_action'];
+echo 'QA_BUTTON_REGISTERED_META=' . wp_json_encode( array(
+    'type' => $button['type'] ?? null,
+    'event' => $button['event'] ?? null,
+    'keys' => array_keys( $button ),
+) ) . PHP_EOL;
 if ( ( $button['type'] ?? '' ) !== \Elementor\Controls_Manager::BUTTON ||
     ( $button['event'] ?? '' ) !== 'heae_acf_save' ) {
     WP_CLI::error( 'Native Save ACF Fields action is not correctly wired' );
