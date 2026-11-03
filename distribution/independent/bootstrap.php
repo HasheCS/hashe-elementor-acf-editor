@@ -16,7 +16,7 @@ add_action( 'plugins_loaded', static function () {
         'hashe-elementor-acf-editor',
         $basename,
         'https://plugins.hashe.com/hashe-elementor-acf-editor/',
-        'https://plugins.hashe.com/api/v1/plugins/hashe-elementor-acf-editor/update'
+        'https://plugins.hashe.com/api/v1/updates/hashe-elementor-acf-editor'
     );
     $update->register();
     $consent = new \Hashe\PluginTools\V1\ConsentClient(
