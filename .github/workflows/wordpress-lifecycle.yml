@@ -100,6 +100,9 @@ jobs:
           )
       - name: WordPress hooks, ACF storage, default-off consent and lifecycle
         shell: bash
+        env:
+          INSTALL_CASE: ${{ matrix.install }}
+          QA_PHP: ${{ matrix.php }}
         run: |
           ( clear
             set -euo pipefail
@@ -108,6 +111,13 @@ jobs:
             php "$WP_BIN" plugin deactivate "$HASHE_QA_SLUG" --path="$WP_ROOT"
             php "$WP_BIN" plugin activate "$HASHE_QA_SLUG" --path="$WP_ROOT"
             php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-live-integration.php" --path="$WP_ROOT"
+            if [[ "$INSTALL_CASE" == 'independent-clean' && "$QA_PHP" == '8.2' ]]; then
+              python3 "$GITHUB_WORKSPACE/tests/build-synthetic-upgrade.py" \
+                "$GITHUB_WORKSPACE/dist-lifecycle/hashe-elementor-acf-editor-v0.6.0.zip" \
+                "$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip"
+              HASHE_QA_SYNTHETIC_ZIP="$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip" \
+                php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-native-update-simulation.php" --path="$WP_ROOT"
+            fi
             php "$WP_BIN" plugin deactivate "$HASHE_QA_SLUG" --path="$WP_ROOT"
             php "$WP_BIN" plugin uninstall "$HASHE_QA_SLUG" --path="$WP_ROOT"
             if php "$WP_BIN" plugin is-installed "$HASHE_QA_SLUG" --path="$WP_ROOT"; then
