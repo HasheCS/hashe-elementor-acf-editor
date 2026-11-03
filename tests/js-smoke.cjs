@@ -39,6 +39,8 @@ assert.match(php, /strip_stale_elementor_acf_values/);
 assert.match(js, /No ACF changes to save\./);
 assert.match(js, /JSON\.stringify\(normalized\) !== baseline\[field\.key\]/);
 assert.match(js, /heae_acf_save_action/);
+assert.match(js, /\$\(document\)\.on\('click', '\.elementor-control-heae_acf_save_action button', saveAcf\)/);
+assert.match(js, /action:\s*'heae_save_acf'/);
 assert.match(extended, /'flexible_content'/);
 assert.match(extended, /'relationship'/);
 assert.match(extended, /'google_map'/);
