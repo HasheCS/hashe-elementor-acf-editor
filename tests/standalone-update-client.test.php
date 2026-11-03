@@ -60,7 +60,7 @@ function qa_reset( $response ) {
 }
 $slug = 'hashe-elementor-acf-editor';
 $uri = 'https://plugins.hashe.com/hashe-elementor-acf-editor/';
-$endpoint = 'https://plugins.hashe.com/api/v1/plugins/hashe-elementor-acf-editor/update';
+$endpoint = 'https://plugins.hashe.com/api/v1/updates/hashe-elementor-acf-editor';
 $ver = '0.6.1';
 $manifest = array(
     'slug' => $slug,
