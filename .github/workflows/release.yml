@@ -73,6 +73,7 @@ jobs:
           node --check assets/editor-native.js
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
+          node tests/delayed-baseline.cjs
           python3 tests/distribution-test.py
           VERSION="${TAG#v}"
           grep -Fq " * Version: $VERSION" hashe-elementor-acf-editor.php
