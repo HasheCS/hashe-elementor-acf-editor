@@ -104,3 +104,17 @@ No runtime site changes. Rollback is close the draft PR or delete only this isol
 5. Peer/security signoff, final release ZIP/tag/checksum and explicit CEO approval before GitHub merge or publication; WordPress.org resubmission later.
 
 **No production code, main, public GitHub release, WordPress.org submission or website backend was changed.**
+
+
+## 2026-11-03 — Authenticated Chrome browser Save acceptance: BLOCKED, staging restored
+
+- Verified the user-authenticated Chrome profile and open Solutions Moco Elementor tab. Opened the dedicated Field Editor QA draft page 654 in that same Chrome profile; no credentials exported and no Chrome restart.
+- Native Elementor UI accessibility exposed 35 numbered field labels (the message-type field renders differently), ACF Page Settings, and the Save ACF Fields button.
+- Existing v0.5.1 no-change Save baseline: twice displayed "ACF controls are still initializing. Nothing was saved; try again." In-browser JavaScript diagnostics showed the HEAE global, 36 schema fields, a live Elementor Page Settings model and a matching Save button DOM node.
+- Draft correction removed the 60-second (tries >= 600) initialization cutoff, replacing it with MutationObserver and a 1-second fallback; new delayed-baseline.cjs tests simulated late opening, no-op, changed-field save, and no duplicate writes. Those tests passed in Windows Node and GitHub CI. Windows CRLF metadata regression was also corrected.
+- **Authenticated v0.6.0 browser acceptance FAILED:** temporarily installed the exact candidate from head 9029f9ed214d293b06066b8e3ef357ec1edc96a5, reloaded Elementor, opened ACF, and clicked unchanged Save. Browser still displayed "ACF controls are still initializing. Nothing was saved; try again." The timeout correction is insufficient. Do not mark this gate passed.
+- Full source-head CI and disposable WordPress tests passed (runs 41620312259 and 41620312266). Those green tests do NOT supersede the real browser failure.
+- Verified private backup and rollback ZIP and captured only draft post 654's test text plus Elementor settings metadata using tests/staging-browser-fixture.php outside webroot. Candidate independent ZIP SHA-256 8dd2f763edf69dc0758e5b9e527385ff119fd641921034ed4d719a17b13add8e. Candidate directory ZIP SHA-256 942c78595821c7db6e615d12a9b9199072767f6ffbe6b1a8981c8de27aec9d96. Neither was released.
+- A bounded server-side watchdog and unconditional rollback trap protected the test. No ACF field edits were attempted after the no-op failure. Explicit completion signal triggered rollback. Restored original active Field Editor v0.5.1 and its SHA, test text, Elementor settings, unchanged FA7 QA plugin SHA and draft status of page 654. FINAL_PPP_ROLLBACK_EXIT=0 and SSH_FINAL_EXIT_STATUS=0.
+- Next diagnostic: verify the actual editor-native.js asset version loaded by Chrome and the per-field snapshot readiness/conversion. Add an automated regression for the observed mechanism, then repeat browser no-change, changed-field, post-reload and restoration tests.
+- STRICT HOLD: PR #5 remains open/draft. No merge, tag, public GitHub v0.6.0, WordPress.org resubmission or release-readiness claim until browser saving passes and the remaining HP-PLUG-001 gates are independently signed off.
