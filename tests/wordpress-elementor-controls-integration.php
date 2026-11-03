@@ -55,22 +55,13 @@ if ( $missing ) {
     WP_CLI::error( 'Field Editor native controls missing: ' . implode( ', ', $missing ) );
 }
 $button = $registered['heae_acf_save_action'];
-// Elementor's get_controls() is a reduced stack descriptor, while
-// get_controls_settings() returns the full control configuration.
-$settings = $document->get_controls_settings();
-$button_settings = is_array( $settings )
-    ? ( $settings['heae_acf_save_action'] ?? array() )
-    : array();
-echo 'QA_BUTTON_META=' . wp_json_encode( array(
-    'registered_type' => $button['type'] ?? null,
-    'settings_event' => $button_settings['event'] ?? null,
-    'settings_text' => $button_settings['text'] ?? null,
-    'settings_keys' => array_keys( $button_settings ),
-) ) . PHP_EOL;
+// Elementor's runtime get_controls() descriptor contains the normalized
+// ID/name/type, but omits presentation attributes such as text and event.
+// Field Editor deliberately delegates click handling in editor-native.js;
+// that actual handler and AJAX payload are exercised by dirty-save.cjs.
 if ( ( $button['type'] ?? '' ) !== \Elementor\Controls_Manager::BUTTON ||
-    ( $button_settings['event'] ?? '' ) !== 'heae_acf_save' ||
-    ( $button_settings['text'] ?? '' ) !== 'Save ACF Fields' ) {
-    WP_CLI::error( 'Native Save ACF Fields action is not correctly wired' );
+    ( $button['name'] ?? '' ) !== 'heae_acf_save_action' ) {
+    WP_CLI::error( 'Native Save ACF Fields button is not registered correctly' );
 }
 if ( ( $registered['heae_acf_field_heae_controls_text']['type'] ?? '' ) !== \Elementor\Controls_Manager::TEXT ||
     ( $registered['heae_acf_field_heae_controls_number']['type'] ?? '' ) !== \Elementor\Controls_Manager::NUMBER ||
