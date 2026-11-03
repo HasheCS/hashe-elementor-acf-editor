@@ -48,6 +48,8 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         assert "Update URI: https://plugins.hashe.com/" + GITHUB_SLUG + "/" in main
         assert "require_once __DIR__ . '/includes/standalone-bootstrap.php';" in main
         assert "update_plugins_plugins.hashe.com" in update
+        assert "https://plugins.hashe.com/api/v1/updates/" + GITHUB_SLUG in bootstrap
+        assert "/api/v1/plugins/" not in bootstrap
         assert "hash_file( 'sha256'" in update and "hash_equals" in update
         assert "'allowed'" in consent and "'revocation-pending'" in consent
         assert "hashe_acf_optional_reporting" in consent
