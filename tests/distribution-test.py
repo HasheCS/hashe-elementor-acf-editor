@@ -57,6 +57,22 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         assert f"{GITHUB_SLUG}/{GITHUB_SLUG}.php" in entries
         assert z.testzip() is None
         assert all(x.startswith(GITHUB_SLUG + "/") for x in entries)
+    # Build independently a second time; both copies must be byte-identical.
+    # ZIP entries must not inherit filesystem, builder clock or OS metadata.
+    again = folder / "second-independent-build"
+    build(again)
+    for archive in (org, ind):
+        duplicate = again / archive.name
+        assert archive.read_bytes() == duplicate.read_bytes(), (
+            f"Nonreproducible package: {archive.name}"
+        )
+        with ZipFile(archive) as checked:
+            for member in checked.infolist():
+                assert member.date_time == (1980, 1, 1, 0, 0, 0), member
+                assert (member.external_attr >> 16) == 0o100644, member
+                assert member.compress_type == 8, member
+    print("PASS: two independent builds are byte-identical with pinned ZIP metadata")
+
     manifest = (folder / "SHA256SUMS.txt").read_text()
     assert len(manifest.splitlines()) == 2
     for archive in [org, ind]:
