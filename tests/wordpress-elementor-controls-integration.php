@@ -55,13 +55,21 @@ if ( $missing ) {
     WP_CLI::error( 'Field Editor native controls missing: ' . implode( ', ', $missing ) );
 }
 $button = $registered['heae_acf_save_action'];
-echo 'QA_BUTTON_REGISTERED_META=' . wp_json_encode( array(
-    'type' => $button['type'] ?? null,
-    'event' => $button['event'] ?? null,
-    'keys' => array_keys( $button ),
+// Elementor's get_controls() is a reduced stack descriptor, while
+// get_controls_settings() returns the full control configuration.
+$settings = $document->get_controls_settings();
+$button_settings = is_array( $settings )
+    ? ( $settings['heae_acf_save_action'] ?? array() )
+    : array();
+echo 'QA_BUTTON_META=' . wp_json_encode( array(
+    'registered_type' => $button['type'] ?? null,
+    'settings_event' => $button_settings['event'] ?? null,
+    'settings_text' => $button_settings['text'] ?? null,
+    'settings_keys' => array_keys( $button_settings ),
 ) ) . PHP_EOL;
 if ( ( $button['type'] ?? '' ) !== \Elementor\Controls_Manager::BUTTON ||
-    ( $button['event'] ?? '' ) !== 'heae_acf_save' ) {
+    ( $button_settings['event'] ?? '' ) !== 'heae_acf_save' ||
+    ( $button_settings['text'] ?? '' ) !== 'Save ACF Fields' ) {
     WP_CLI::error( 'Native Save ACF Fields action is not correctly wired' );
 }
 if ( ( $registered['heae_acf_field_heae_controls_text']['type'] ?? '' ) !== \Elementor\Controls_Manager::TEXT ||
