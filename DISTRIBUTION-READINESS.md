@@ -67,3 +67,40 @@ GitHub CI builds and tests both ZIPs as ephemeral artifacts. DO NOT mistake CI a
 
 ## Rollback and scope
 No runtime site changes. Rollback is close the draft PR or delete only this isolated candidate branch after approval. Published v0.5.1 ZIP, protected main, WordPress.org submission and plugins.hashe.com remain unchanged.
+
+
+## PPP checkpoint — 2026-11-03: reproducibility and ACF Pro staging QA
+
+**Scope:** Hashe Field Editor only. Font Awesome and the Plugins Website workstreams were not changed.
+
+### GitHub and real WordPress QA
+- Candidate head 5837ea60a3557f5b4c09f6915f0887b748bc5082; CI runs 41611327530 and 41611327503 both SUCCESS. PR #5 remains open and draft.
+- Real WordPress AJAX tests passed: unauthorized edits, bad nonce, field allowlist, required-field validation, four typed field writes, persistence, and preserving native Elementor Page Settings while removing stale ACF mirrors.
+- Real Elementor document registration test passed for native field controls and Save button identity; delegated JavaScript click/AJAX logic is separately tested. Browser visual/editor interaction remains untested.
+
+### Reproducible package defect and correction
+- Pre-fix same-source ZIP builds generated different SHA-256 values due to current-time metadata. This was confirmed with two independent builds: NONREPRODUCIBLE.
+- The candidate builder now pins member timestamp, UNIX file mode, entry order and compression. The distribution QA tests two independent byte-for-byte builds, and the checks passed again on staging hosting with a 3-second delay.
+- Exact candidate independent ZIP: hashe-elementor-acf-editor-v0.6.0.zip, 9 files, SHA-256 470ee5946fb4fc09197986aee9cea87574bc1bd7e9c35402eb0432f0138297d7.
+- Exact candidate directory ZIP: hashe-field-editor-v0.6.0-wporg.zip, 6 files, SHA-256 a82ba0f8ba74898ae910e520210441810c21fdd1bfdb3fefd68c721bc7beaf2e.
+- Neither ZIP is a published release. Any feature/source change requires repeating the artifact checks.
+
+### Verified Solutions Moco ACF Pro acceptance and rollback
+- Authorized route: Windows Desktop Commander -> ssh sasse -> dev.sasseagency.com/solutions. WordPress 7.1.4, Elementor 4.3.5, Elementor Pro 4.3.2, ACF Pro 6.8.10.
+- Before site mutation, complete v0.5.1 plugin and QA database backups were saved privately outside webroot: /bigdisk/home/devsasseagency/.hashe-field-editor-qa/backup-20261103T091533Z/. Hashes and gzip tests passed; original plugin was extracted and verified with diff-based comparison.
+- Temporarily installed candidate v0.6.0 via WP-CLI and ran source-versioned, scope-locked read-only ACF Pro test on QA draft page 654: one matching field group, 36 assigned fields, all 36 native Elementor field controls present, 8 additional ACF Pro adapters mapped and native Save action hooks present.
+- Unconditional rollback installed v0.5.1. Exact old main-file SHA-256 e0384be7f9e40ad029e1b8b04981acfa3ff8054a1d7ff812e3f90a074fa5b21e passed. Shared FA7 QA3 plugin main-file hash unchanged. Page 654 remains draft. Final staging execution exit code 0.
+- This verifies server-side ACF Pro controls and adapters only. It does NOT certify browser UI, field entry, every field save, or post-reload persistence in the actual Elementor browser editor.
+
+### Update service dependency
+- Read-only live JSON feed at https://plugins.hashe.com/api/v1/updates/hashe-elementor-acf-editor still serves stable v0.5.1 with the known GitHub SHA, but tested and requires_php are null.
+- The strict updater intentionally rejects incomplete compatibility metadata. Website workstream owns the fix; this plugin thread made NO website changes.
+
+### Unresolved release blockers
+1. Authenticated Elementor browser acceptance for field rendering, 36-field interaction and saving, reload persistence, and native Elementor/Font Awesome coexistence.
+2. Independently verified live stable-version Update now, integrity failure and rollback under a valid owner-fed metadata contract, without telemetry consent.
+3. Live privacy-approved opt-in, report, revoke and deletion backend acceptance; mocked client tests alone are not sufficient.
+4. Final directory artwork binary import/banner approval and formal HP-PLUG-001 dual-package exception.
+5. Peer/security signoff, final release ZIP/tag/checksum and explicit CEO approval before GitHub merge or publication; WordPress.org resubmission later.
+
+**No production code, main, public GitHub release, WordPress.org submission or website backend was changed.**
