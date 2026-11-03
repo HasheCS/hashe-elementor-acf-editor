@@ -31,9 +31,9 @@ jobs:
       - name: Verify existing tagged main commit and explicit release approval
         shell: bash
         env:
-          TAG: \${{ inputs.release_tag }}
-          APPROVAL: \${{ inputs.explicit_approval }}
-          GH_TOKEN: \${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+          APPROVAL: ${{ inputs.explicit_approval }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           [[ "$APPROVAL" == "PUBLISH-APPROVED-HASHE-FIELD-EDITOR" ]] || { echo 'Explicit approval token missing'; exit 2; }
@@ -59,7 +59,7 @@ jobs:
       - name: Mandatory source regression and integrity checks
         shell: bash
         env:
-          TAG: \${{ inputs.release_tag }}
+          TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
           php -l hashe-elementor-acf-editor.php
@@ -74,7 +74,7 @@ jobs:
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
           python3 tests/distribution-test.py
-          VERSION="\${TAG#v}"
+          VERSION="${TAG#v}"
           grep -Fq " * Version: $VERSION" hashe-elementor-acf-editor.php
           grep -Fq "Stable tag: $VERSION" readme.txt
           echo "RELEASE_SOURCE_REGRESSION=PASS"
@@ -82,7 +82,7 @@ jobs:
       - name: Build and verify standalone ZIP from exact tagged source
         shell: bash
         env:
-          TAG: \${{ inputs.release_tag }}
+          TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
           python3 tools/build_distributions.py --output dist-release
@@ -102,11 +102,11 @@ jobs:
       - name: Publish approved independent package (manual only)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: \${{ inputs.release_tag }}
+          tag_name: ${{ inputs.release_tag }}
           draft: false
           prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            dist-release/hashe-elementor-acf-editor-\${{ inputs.release_tag }}.zip
+            dist-release/hashe-elementor-acf-editor-${{ inputs.release_tag }}.zip
             dist-release/INDEPENDENT-SHA256SUMS.txt
