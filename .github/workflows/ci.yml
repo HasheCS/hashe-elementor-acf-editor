@@ -58,8 +58,10 @@ jobs:
           node --check assets/editor-native.js
           node --check tests/js-smoke.cjs
           node --check tests/dirty-save.cjs
+          node --check tests/delayed-baseline.cjs
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
+          node tests/delayed-baseline.cjs
 
   distribution-candidates:
     runs-on: ubuntu-latest
