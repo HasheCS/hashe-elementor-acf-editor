@@ -1,7 +1,7 @@
 name: Isolated WordPress lifecycle - Hashe Field Editor
 on:
   push:
-    branches: ['release/**']
+    branches: ['main', 'release/**']
   pull_request:
   workflow_dispatch:
 permissions:
