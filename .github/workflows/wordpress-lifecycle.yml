@@ -10,6 +10,8 @@ jobs:
   wordpress-lifecycle:
     name: "WP PHP ${{ matrix.php }} / ${{ matrix.install }}"
     runs-on: ubuntu-latest
+    env:
+      TERM: xterm
     timeout-minutes: 25
     strategy:
       fail-fast: false
