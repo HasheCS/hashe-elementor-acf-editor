@@ -8,7 +8,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../assets/editor-native.js'), 'utf8');
 
-function scenario(withObserver) {
+function scenario(withObserver, initialFailure = '') {
     let mounted = false;
     let interval = null;
     let timerActive = true;
@@ -19,6 +19,10 @@ function scenario(withObserver) {
     let posts = [];
     const field = { key: 'field_heae_qa_text', id: 'heae_acf_field_heae_qa_text', type: 'text', editable: true };
     const values = { [field.id]: 'Existing value' };
+    if (initialFailure === 'missing') delete values[field.id];
+    if (initialFailure === 'throws') values[field.id] = {
+        toJSON() { throw new TypeError('sentinel not user data'); }
+    };
     const document = {
         body: {},
         querySelector() { return mounted ? {} : null; },
@@ -79,12 +83,27 @@ function scenario(withObserver) {
     assert.equal(timerActive, true, 'Baseline monitoring must not time out before panel opens');
 
     mounted = true;
+    assert.equal(typeof window.HEAE.readiness, 'function', 'Privacy-safe runtime diagnostic is available');
     if (withObserver) {
         assert.equal(typeof observerCallback, 'function', 'MutationObserver should be installed');
         observerCallback();
     } else {
         interval();
     }
+    if (initialFailure) {
+        const state = window.HEAE.readiness();
+        assert.equal(state.captured, false, 'Invalid initial value cannot become the save baseline');
+        assert.equal(state.phase, initialFailure === 'missing'
+            ? 'undefined-value:text'
+            : 'conversion-error:text:TypeError');
+        assert.equal(timerActive, true, 'Monitor must remain active while model is not ready');
+        assert.doesNotMatch(JSON.stringify(state), /Existing value|sentinel not user data/,
+            'Diagnostics must not disclose saved user values or errors');
+        values[field.id] = 'Existing value';
+        interval();
+    }
+    assert.equal(window.HEAE.readiness().phase, 'ready');
+    assert.equal(window.HEAE.readiness().editableFieldCount, 1);
     assert.equal(timerActive, false, 'Baseline polling must stop after capture');
     if (withObserver) assert.equal(observerDisconnected, true, 'Observer must disconnect after capture');
 
@@ -104,5 +123,9 @@ function scenario(withObserver) {
 for (const mode of [false, true]) {
     const test = scenario(mode);
     console.log('PASS=LATE_ACF_PANEL_BASELINE_' + test.toUpperCase());
+}
+for (const issue of ['missing', 'throws']) {
+    scenario(true, issue);
+    console.log('PASS=ACF_READINESS_RECOVERS_FROM_' + issue.toUpperCase());
 }
 console.log('PASS=LATE_OPEN_NOOP_CHANGE_SAVE_NO_DUPLICATE_POST');
