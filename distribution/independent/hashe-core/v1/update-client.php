@@ -167,20 +167,35 @@ if ( ! class_exists( __NAMESPACE__ . '\\UpdateClient', false ) ) {
             }
 
             $ver = $m['version'];
+            $wp_min = $m['requires'] ?? $m['requires_wordpress'] ?? null;
+            $compat_version = '/^[0-9]+\.[0-9]+(?:\.[0-9]+)?$/D';
             if ( ! preg_match( '/^[0-9]+\.[0-9]+\.[0-9]+$/D', $ver ) ||
                 $m['tag'] !== 'v' . $ver ||
                 ! preg_match( '/^[a-f0-9]{64}$/D', $m['sha256'] ) ||
-                ! preg_match( '/^[0-9]+\.[0-9]+(?:\.[0-9]+)?$/D', $m['requires_php'] ) ||
-                ! preg_match( '/^[0-9]+\.[0-9]+(?:\.[0-9]+)?$/D', $m['tested'] ) ) {
+                ! is_string( $wp_min ) || ! preg_match( $compat_version, $wp_min ) ||
+                ( isset( $m['requires'], $m['requires_wordpress'] ) &&
+                    $m['requires'] !== $m['requires_wordpress'] ) ||
+                ! preg_match( $compat_version, $m['requires_php'] ) ||
+                ! preg_match( $compat_version, $m['tested'] ) ||
+                version_compare( $m['tested'], $wp_min, '<' ) ) {
                 return false;
             }
 
-            // The only acceptable package is this repository's exact stable
-            // GitHub release asset; never use a dynamic branch, prerelease
-            // source archive, arbitrary host, or a redirect supplied by data.
-            $expected = 'https://github.com/HasheCS/' . $this->slug .
-                '/releases/download/v' . $ver . '/' . $this->slug . '-v' . $ver . '.zip';
-            if ( $m['package_url'] !== $expected ||
+            // The website must approve this exact ZIP, version and SHA256.
+            // Accept a versioned independent asset basename without inventing
+            // the release filename. Never accept another repository, channel,
+            // GitHub branch/source archive, nested path, query or redirect.
+            $prefix = 'https://github.com/HasheCS/' . $this->slug .
+                '/releases/download/v' . $ver . '/';
+            if ( 0 !== strpos( $m['package_url'], $prefix ) ) {
+                return false;
+            }
+            $filename = substr( $m['package_url'], strlen( $prefix ) );
+            if ( ! preg_match( '/^' . preg_quote( $this->slug, '/' ) .
+                '-[A-Za-z0-9][A-Za-z0-9._-]*\.zip$/D', $filename ) ||
+                false !== strpos( $filename, '..' ) ||
+                false !== stripos( $filename, 'wporg' ) ||
+                false !== stripos( $filename, 'wordpress-org' ) ||
                 $m['details_url'] !== 'https://github.com/HasheCS/' .
                 $this->slug . '/releases/tag/v' . $ver ) {
                 return false;
