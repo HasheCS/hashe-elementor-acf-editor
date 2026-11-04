@@ -1,5 +1,88 @@
 # ACF Editor v0.6.0 — dual-distribution candidate (NOT RELEASED)
 
+## Current authoritative checkpoint — HP-PLUG-001 / HP-WEB-001 v1.2, November 4, 2026
+
+**Binding owner policy supersedes earlier proposed one-ZIP exception and earlier
+assumption that WordPress.org edition may omit installation reporting.** The
+historical entries below describe prior snapshots; this section is the
+current release assessment and is NOT authorization to publish.
+
+- **Both channels required:** directory candidate `hashe-field-editor/hashe-field-editor.php`
+  uses WordPress.org-native updates; independent
+  `hashe-elementor-acf-editor/hashe-elementor-acf-editor.php` uses
+  Hashe's approved immutable release feed, never the directory updater.
+  These are distinct plugin basenames and should **not** be installed
+  simultaneously as two copies of the same feature. Never migrate silently.
+- **Mandatory opt-in capability, voluntary permission:** both v0.6.0
+  packages now ship the per-plugin admin-only Allow / Skip / Revoke
+  client. No optional reporting is activated without affirmative consent
+  and an approved secured service contract. Existing WordPress.org
+  package no longer deletes consent capability. No live proof/enrollment
+  endpoint is assumed or invoked.
+- **Release synchronization:** an accepted, authorized GitHub stable ZIP
+  triggers the website's automatic verified release sync without a second
+  website approval. This is HP-WEB-001's backend delivery obligation;
+  the Phase 5 production integration is **not yet deployed**.
+- **Conditionally approved PR #5:** Owner authorization to merge and
+  publish v0.6.0 activates only after all actual browser, security,
+  compatibility, privacy/integration, update, packaging and rollback
+  acceptance gates pass. The PR is still draft; main and public v0.5.1
+  remain unchanged. WordPress.org upload/reviewer acceptance is separate.
+
+**New v1.2 test evidence:**
+- Exact code/package head `d5a615a553d0afded50714c918dc84aac35236fa`
+  and subsequent test-only coexistence update
+  `547f92c45b41a66c22445569fb494e849d10cb58`.
+  All nine disposable WordPress lifecycle jobs and PHP/JS and package QA
+  completed SUCCESS. The directory package includes the default-off
+  consent client, tested in the real disposable WordPress
+  Allow/Skip/Revoke flow; independent-channel ZIP SHA256
+  `256c56a5aa559b480c6cac92bae5b919253e8da65c48aec93054614f5928c62f`
+  (9 entries); directory ZIP SHA256
+  `0f21b080a06e23acba7e8a232c772f44e700b399db9a3dd96d7b40d5b0666f3f`
+  (8 entries). Exact build source and ZIP input files are unchanged
+  by the later test-only CI update.
+- New pinned FA7 `45a58b2cce1c6609415bdf39789c0928e654d850`
+  WordPress.org coexistence acceptance PASSED on disposable WordPress:
+  both active, no third-party update hooks, no PHP collisions, isolated
+  opt-in state/cron and skip behavior. Evidence:
+  https://github.com/HasheCS/hashe-elementor-acf-editor/actions/runs/41838593233
+- Existing independent v0.5.1 upgrade, ACF Free AJAX save,
+  ACF Pro 36-control server registration and all source-unit checks
+  retain their earlier evidence. The updated ACF directory Plugin Check
+  CI action passed. This is not reviewer approval.
+
+**Release-blocking evidence still OPEN:**
+1. Real authenticated Chrome **typed field edit -> Save -> server-side
+   ACF value -> reload** on v0.6.0 (and representative ACF Pro advanced
+   field behavior), not only a no-change Save. Current Windows UI
+   accessibility/keystroke automation did not reliably mutate the native
+   control. A genuine graphical-browser proof is mandatory.
+2. Backend's joint HP-API-001 v1.1 integration contract is still
+   PROPOSED; real opt-in site proof/enrollment/report/revoke,
+   30-day original-consent correctness and secure service E2E are untested.
+   No reporting deployment or production activation is authorized.
+3. WordPress.org official `hashe-field-editor` slug/reviewer
+   acceptance, approved binary directory artwork import and banner
+   approval, and final source/license/security acceptance remain open.
+4. Automatic Phase 5 sync and actual newer stable independent
+   `Update now` from a live website-approved feed cannot pass until
+   the backend is deployed and a version is legitimately approved.
+   Old public v0.5.1 requires a documented one-time managed/manual
+   first adoption, then built-in updates.
+5. Final release preflight must verify the exact approved merge commit,
+   immutable tag, archive SHA, backups and tested rollback, and no
+   new unstaged changes or material regressions.
+
+**PPP staging restoration:** Following supervised Solutions QA,
+the original Field Editor v0.5.1 main PHP SHA256
+`e0384be7f9e40ad029e1b8b04981acfa3ff8054a1d7ff812e3f90a074fa5b21e`,
+QA draft #654 original field/settings and status, and FA7
+installation fingerprint were independently verified restored.
+No stable tag, PR merge, published ZIP, WordPress.org submission,
+backend deployment or production telemetry activation was performed.
+
+
 Date: 2026-11-02. Scope: HasheCS/hashe-elementor-acf-editor only.
 
 ## Authority and controls
@@ -17,10 +100,10 @@ WordPress.org Plugin Directory guideline 8 and Plugin Check forbid a competing t
 
 | Distribution | Directory/entrypoint | Updates | Contents |
 |---|---|---|---|
-| WordPress.org | `hashe-field-editor/hashe-field-editor.php` | WordPress.org core update service | Feature code + readme/LICENSE; no custom updater or telemetry client |
+| WordPress.org | `hashe-field-editor/hashe-field-editor.php` | WordPress.org core update service | Feature code + default-off consent client; no custom updater |
 | Independent | `hashe-elementor-acf-editor/hashe-elementor-acf-editor.php` | Hashe approved stable update metadata only, verified SHA-256 ZIP | Same feature code, isolated update client, default-off optional consent client |
 
-This **requires a documented exception/clarification** to HP-PLUG-001's literal “one identical ZIP” language: two separately verified immutable release artifacts, from the same approved source/version, with only distribution-specific headers and standalone service modules. The governing Google Doc has NOT been changed. Do not publish either variant until this is explicitly reconciled and authorized.
+**SUPERSEDED by HP-PLUG-001 v1.2:** The owner mandates two channel-appropriate ZIPs from approved source, with consent capability in both. The independent artifact must match GitHub and Hashe's website byte-for-byte; WordPress.org owns its own update provider. Do not publish before the remaining acceptance gates.
 
 ## Update status
 - Independent Update URI: `https://plugins.hashe.com/hashe-elementor-acf-editor/`.
@@ -31,11 +114,11 @@ This **requires a documented exception/clarification** to HP-PLUG-001's literal 
 - The independent plugin folder/main basename intentionally remain identical to v0.5.1 for upgrades. Never install the WordPress.org and independent variant concurrently, since they implement the same PHP classes/controls. Coexistence and migration deserve explicit verification before publication.
 
 ## Optional installation reporting
-- Only the independent candidate contains the opt-in module.
+- Both candidate distributions contain the mandatory default-off opt-in module under HP-PLUG-001 v1.2.
 - Default no contract, no opt-in action, no telemetry network calls, no site ID. Skip remains local.
 - A future live consent path requires HP-WEB-001 Phase 7: authentication contract, retention/disclosure, revocation/deletion endpoint, abuse control and integration testing.
 - Do not advertise functioning live reporting merely because candidate client files exist.
-- A directory variant may need its own compliant, consent-based reporting after backend readiness. It is deliberately omitted from this prereview ZIP to avoid unnecessary third-party contact.
+- The directory variant now includes the same collision-safe consent client and a directory-specific bootstrap while excluding the external updater. No external reporting occurs before an approved security/privacy contract and administrator opt-in.
 
 ## Readiness gates (currently NOT certified)
 1. PHP 7.4/8.2/8.3 lint + existing ACF/Elementor PHP and JS regression suite.
@@ -45,7 +128,7 @@ This **requires a documented exception/clarification** to HP-PLUG-001's literal 
 5. WordPress.org naming/slug approval, Hashe ownership proof using @hashe.com email or authorized DNS TXT record.
 6. Live standalone update: older ZIP -> approved newer ZIP, safe checksum rejection/rollback, opt-out unaffected; no updates to stable/prerelease branches without approval.
 7. Consent Skip/Allow/revoke and server-side deletion end-to-end; service down and offline behavior.
-8. Reconcile HP-PLUG-001 distribution-artifact exception, peer review, final user approval BEFORE merge/tag/release/WordPress.org upload or email.
+8. Apply HP-PLUG-001 v1.2's binding two-channel rule, complete peer review and all mandatory evidence before the owner's conditional PR #5 merge/tag/publication authority can take effect; WordPress.org approval remains separate.
 
 ## Reproducible build
 `python3 tests/distribution-test.py`
