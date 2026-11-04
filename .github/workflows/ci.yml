@@ -90,7 +90,8 @@ jobs:
             test "$(git -C "$RUNNER_TEMP/fa7" rev-parse HEAD)" = "$fa7_head"
             php -l tests/cross-plugin-client-coexistence.php
             php tests/cross-plugin-client-coexistence.php "$RUNNER_TEMP/fa7/hashe-fa7-elementor"
-            echo 'HP_PLUGINS_PINNED_FA7_AND_FIELD_EDITOR_QA=PASS'
+            php tests/cross-plugin-client-coexistence.php "$RUNNER_TEMP/fa7/hashe-fa7-elementor" fa7-first
+            echo 'HP_PLUGINS_PINNED_FA7_AND_FIELD_EDITOR_BOTH_LOAD_ORDERS=PASS'
           )
 
   distribution-candidates:
