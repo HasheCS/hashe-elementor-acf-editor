@@ -65,7 +65,7 @@ jobs:
           node tests/delayed-baseline.cjs
 
   cross-plugin-coexistence:
-    name: "Pinned FA7 + Field Editor embedded client QA / PHP \${{ matrix.php }}"
+    name: "Pinned FA7 + Field Editor embedded client QA / PHP ${{ matrix.php }}"
     runs-on: ubuntu-latest
     timeout-minutes: 12
     strategy:
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: \${{ matrix.php }}
+          php-version: ${{ matrix.php }}
           tools: none
       - name: Verify pinned FA7 draft and both plugin client namespaces
         shell: bash
