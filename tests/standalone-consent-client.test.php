@@ -40,13 +40,13 @@ function wp_generate_uuid4() { return '11111111-1111-4111-8111-111111111111'; }
 define( 'WP_PLUGIN_DIR', __DIR__ . '/qa-plugins' );
 
 require dirname( __DIR__ ) . '/distribution/independent/hashe-core/v1/consent-client.php';
-$client = new \Hashe\PluginTools\V1\ConsentClient(
+$client = new \Hashe\FieldEditor\PluginTools\V1\ConsentClient(
     'hashe-elementor-acf-editor', 'hashe-elementor-acf-editor/hashe-elementor-acf-editor.php'
 );
 $client->register();
 qa( isset( $GLOBALS['qa_hooks']['admin_post_hashe_acf_privacy_choice'] ), 'admin only POST hook registered' );
 qa( isset( $GLOBALS['qa_hooks']['hashe_acf_optional_reporting_tick'] ), 'optional scheduled callback registered' );
-\Hashe\PluginTools\V1\ConsentClient::on_activation();
+\Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_activation();
 qa( get_option( 'hashe_acf_show_privacy_notice' ) === '1', 'first activation shows privacy settings notice' );
 qa( get_option( 'hashe_acf_optional_reporting_v1', false ) === false, 'no consent or installation ID created on activation' );
 $client->send_report();
@@ -63,7 +63,7 @@ qa( strpos( $page, 'No reporting endpoint or approved disclosure contract' ) !==
 update_option( 'hashe_acf_optional_reporting_v1', array( 'status' => 'declined', 'at' => time() ), false );
 $client->send_report();
 qa( $GLOBALS['qa_remote'] === array(), 'declined mode sends no data' );
-\Hashe\PluginTools\V1\ConsentClient::on_activation();
+\Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_activation();
 qa( count( $GLOBALS['qa_scheduled'] ) === 0, 'declined consent is not reinstated at activation' );
 
 $GLOBALS['qa_contract'] = array(
@@ -103,9 +103,9 @@ qa( ! empty( $GLOBALS['qa_scheduled']['hashe_acf_optional_reporting_tick'] ), 'n
 update_option( 'hashe_acf_optional_reporting_v1', array( 'status' => 'revocation-pending' ), false );
 $client->send_report();
 qa( count( $GLOBALS['qa_remote'] ) === 1, 'revocation immediately blocks reporting' );
-\Hashe\PluginTools\V1\ConsentClient::on_deactivation();
+\Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_deactivation();
 qa( $GLOBALS['qa_scheduled'] === array(), 'deactivation removes optional telemetry cron event' );
-\Hashe\PluginTools\V1\ConsentClient::on_activation();
+\Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_activation();
 qa( $GLOBALS['qa_scheduled'] === array(), 'revoked consent never silently restored after reactivation' );
 
 $GLOBALS['qa_contract']['report_endpoint'] = 'https://evil.example/collect';
@@ -115,6 +115,6 @@ update_option( 'hashe_acf_optional_reporting_v1', array(
 ), false );
 $client->send_report();
 qa( count( $GLOBALS['qa_remote'] ) === 1, 'unapproved endpoint blocked despite stored consent' );
-\Hashe\PluginTools\V1\ConsentClient::on_uninstall();
+\Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_uninstall();
 qa( get_option( 'hashe_acf_optional_reporting_v1', false ) === false, 'uninstall removes local consent state' );
 echo "CONSENT_SECURITY_AND_LIFECYCLE_TESTS=PASS\n";
