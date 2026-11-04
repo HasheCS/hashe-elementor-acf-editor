@@ -67,6 +67,8 @@ jobs:
   cross-plugin-coexistence:
     name: "Pinned FA7 + Field Editor embedded client QA / PHP ${{ matrix.php }}"
     runs-on: ubuntu-latest
+    env:
+      TERM: xterm
     timeout-minutes: 12
     strategy:
       fail-fast: false
