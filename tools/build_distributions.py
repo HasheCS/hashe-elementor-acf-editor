@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build two auditable, UNPUBLISHED ACF Editor candidate ZIPs from one source.
 
-WordPress.org: its own slug/text domain, NO independent updater/reporting code.
+WordPress.org: its own slug/text domain, mandatory default-off consent, NO independent updater.
 Independent: preserves existing GitHub plugin basename, isolated Hashe update
 and default-off consent modules, and a namespaced Update URI.
 No site, WordPress.org account, API endpoint or GitHub release is changed.
@@ -28,6 +28,11 @@ ALLOWED_FILES = (
 EXTRA_FILES = (
     "distribution/independent/bootstrap.php",
     "distribution/independent/hashe-core/v1/update-client.php",
+    "distribution/independent/hashe-core/v1/consent-client.php",
+)
+
+ORG_CONSENT_FILES = (
+    "distribution/wordpress-org/consent-bootstrap.php",
     "distribution/independent/hashe-core/v1/consent-client.php",
 )
 
@@ -77,6 +82,13 @@ def contents(distribution: str) -> dict[str, bytes]:
                     )
                 if relative == ENTRY:
                     output_path = ORG_SLUG + ".php"
+                    data = replace_once(
+                        data,
+                        "require_once __DIR__ . '/includes/extended-fields.php';",
+                        "require_once __DIR__ . '/includes/extended-fields.php';\n"
+                        "require_once __DIR__ . '/includes/consent-bootstrap.php';",
+                        "Mandatory WordPress.org consent bootstrap",
+                    )
                 if relative == "readme.txt":
                     data = data.replace(
                         "2. Download the versioned installable ZIP from https://github.com/HasheCS/"
@@ -109,10 +121,17 @@ def contents(distribution: str) -> dict[str, bytes]:
                 suffix = "standalone-bootstrap.php"
             result[f"{folder}/includes/{suffix}"] = (ROOT / relative).read_bytes()
     else:
-        if any(b"Update URI:" in b or b"update_plugins_plugins.hashe.com" in b for b in result.values()):
+        for relative in ORG_CONSENT_FILES:
+            suffix = ("consent-bootstrap.php" if relative.endswith("consent-bootstrap.php")
+                      else "hashe-core/v1/consent-client.php")
+            data = (ROOT / relative).read_text(encoding="utf-8")
+            data = data.replace("'" + GITHUB_SLUG + "'", "'" + ORG_SLUG + "'")
+            result[f"{folder}/includes/{suffix}"] = data.encode("utf-8")
+        if any(b"Update URI:" in entry or b"update_plugins_plugins.hashe.com" in entry
+               for entry in result.values()):
             raise ValueError("WordPress.org package would include external updater")
-        if any(b"telemetry/report" in b for b in result.values()):
-            raise ValueError("WordPress.org package would include independent telemetry client")
+        if not any(b"hashe_acf_optional_reporting_v1" in entry for entry in result.values()):
+            raise ValueError("WordPress.org mandatory consent client missing")
     return result
 
 

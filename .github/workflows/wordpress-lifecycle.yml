@@ -123,6 +123,8 @@ jobs:
                 "$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip"
               HASHE_QA_SYNTHETIC_ZIP="$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip" \
                 php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-native-update-simulation.php" --path="$WP_ROOT"
+            fi
+            if [[ "$QA_PHP" == '8.2' && ( "$INSTALL_CASE" == 'independent-clean' || "$INSTALL_CASE" == 'wordpress-org-clean' ) ]]; then
               for stage in default skip skipped allow report offline revoke-fail pending; do
                 HASHE_QA_CONSENT_STAGE="$stage" php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-consent-live-integration.php" --path="$WP_ROOT"
               done

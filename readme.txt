@@ -27,6 +27,8 @@ Important: Elementor-native representations of composite fields are not identica
 
 No ACF Pro, Elementor Pro or other proprietary paid components are bundled. Elementor and Advanced Custom Fields are independent third-party trademarks.
 
+**Optional installation reporting:** Both WordPress.org and independent Hashe builds include administrator-only Allow, Skip, and Revoke controls under Settings > Hashe ACF Privacy. Reporting is strictly off by default; use of the plugin and ordinary WordPress updates never requires permission. If explicitly opted in after service privacy/security approval, the optional Hashe Plugins service (https://plugins.hashe.com/) would receive the site URL, plugin slug/version, random installation ID, reporting timestamp and last-reported activation status. No site content, user account, email, password or Kit credentials are included. Skip preserves all functionality; Revoke stops reports and requests server-side deletion when applicable. Until the backend security/privacy contract is finalized, Allow is disabled and no installation reporting is activated.
+
 == Installation ==
 
 1. Back up the site and test on staging.
@@ -56,7 +58,8 @@ No. Elementor's main Update/Publish action is separate.
 = 0.6.0 (release candidate, not published) =
 * Declare Elementor and Advanced Custom Fields as required WordPress plugins.
 * Prepare distinct WordPress.org and standalone distribution identities without changing Elementor/ACF editing behavior.
-* Independent update and privacy reporting clients are candidate-only, pending live service integration and approval.
+* Both WordPress.org and independent packages retain default-off, admin-only Allow/Skip/Revoke controls; backend enrollment remains gated pending security/privacy acceptance.
+* WordPress.org channel uses directory updates exclusively; independent channel uses Hashe's verified stable update feed.
 
 = 0.5.1 =
 * WordPress.org submission-readiness: translator context and dependency notice improvements.

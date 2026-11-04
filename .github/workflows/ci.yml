@@ -27,6 +27,7 @@ jobs:
           php -l hashe-elementor-acf-editor.php
           php -l includes/extended-fields.php
           php -l distribution/independent/bootstrap.php
+          php -l distribution/wordpress-org/consent-bootstrap.php
           php -l distribution/independent/hashe-core/v1/update-client.php
           php -l distribution/independent/hashe-core/v1/consent-client.php
           php -l tests/php-smoke.php

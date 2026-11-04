@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
     assert org.is_file() and ind.is_file()
     with ZipFile(org) as z:
         entries = set(z.namelist())
-        assert len(entries) == 6, entries
+        assert len(entries) == 8, entries
         main = z.read(f"{ORG_SLUG}/{ORG_SLUG}.php").decode()
         readme = z.read(f"{ORG_SLUG}/readme.txt").decode()
         extended = z.read(f"{ORG_SLUG}/includes/extended-fields.php").decode()
@@ -30,8 +30,16 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         assert "Requires Plugins: elementor, advanced-custom-fields" in main
         assert "Update URI:" not in main
         assert "standalone-bootstrap" not in main
-        assert "update_plugins_plugins.hashe.com" not in main + readme + extended
-        assert "telemetry/report" not in main + readme + extended
+        assert "require_once __DIR__ . '/includes/consent-bootstrap.php';" in main
+        org_bootstrap = z.read(f"{ORG_SLUG}/includes/consent-bootstrap.php").decode()
+        org_consent = z.read(f"{ORG_SLUG}/includes/hashe-core/v1/consent-client.php").decode()
+        assert r"\Hashe\FieldEditor\PluginTools\V1\ConsentClient" in org_bootstrap
+        assert "hashe_acf_optional_reporting_v1" in org_consent
+        assert "hashe_acf_privacy_choice" in org_consent
+        assert "/api/v1/telemetry/report" in org_consent
+        assert not any(x.endswith("/update-client.php") for x in entries)
+        assert "update_plugins_plugins.hashe.com" not in main + readme + extended + org_bootstrap + org_consent
+        assert "Update URI:" not in main + org_bootstrap + org_consent
         assert GITHUB_SLUG + ".php" not in entries
         assert "github.com/HasheCS/" + GITHUB_SLUG in main + readme
         assert "Stable tag: " + version in readme
@@ -79,7 +87,7 @@ with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
         digest = hashlib.sha256(archive.read_bytes()).hexdigest()
         assert f"{digest}  {archive.name}" in manifest
     print("PASS: plugin dependencies and consistent candidate versions")
-    print("PASS: directory package has new slug/text domain and no independent updates/telemetry")
+    print("PASS: directory package has slug/text domain, default-off consent and NO independent updater")
     print("PASS: independent package preserves old folder identity and adds checksum-gated updater")
     print("PASS: opt-in reporting stays separate from WordPress update requests")
     print("PASS: both ZIP files valid and SHA256 manifest agrees")

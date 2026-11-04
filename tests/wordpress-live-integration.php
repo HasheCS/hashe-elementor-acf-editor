@@ -53,16 +53,16 @@ if ( $standalone ) {
         false === has_filter( 'upgrader_pre_download' ) ) {
         WP_CLI::error( 'Independent native updater identity/hooks are missing' );
     }
-    if ( false === has_action( 'admin_post_hashe_acf_privacy_choice' ) ||
-        false === has_action( 'hashe_acf_optional_reporting_tick' ) ) {
-        WP_CLI::error( 'Independent opt-in and revocation controls are missing' );
-    }
-} else {
-    if ( ! empty( $update_uri ) ||
-        false !== has_filter( 'update_plugins_plugins.hashe.com' ) ||
-        false !== has_action( 'admin_post_hashe_acf_privacy_choice' ) ) {
-        WP_CLI::error( 'Directory package contains independent update/telemetry functionality' );
-    }
+}
+// Consent controls are mandatory in BOTH channels, never linked to updater.
+if ( false === has_action( 'admin_post_hashe_acf_privacy_choice' ) ||
+    false === has_action( 'hashe_acf_optional_reporting_tick' ) ) {
+    WP_CLI::error( 'Mandatory per-plugin consent and revocation controls missing' );
+}
+if ( ! $standalone && ( ! empty( $update_uri ) ||
+    false !== has_filter( 'update_plugins_plugins.hashe.com' ) ||
+    false !== has_filter( 'upgrader_pre_download' ) ) ) {
+    WP_CLI::error( 'WordPress.org channel must not register third-party updater' );
 }
 
 $privacy = get_option( 'hashe_acf_optional_reporting_v1', false );
@@ -120,9 +120,7 @@ $guard = static function ( $pre, $args, $url ) use ( &$contact ) {
     return $pre;
 };
 add_filter( 'pre_http_request', $guard, 10, 3 );
-if ( $standalone ) {
-    do_action( 'hashe_acf_optional_reporting_tick' );
-}
+do_action( 'hashe_acf_optional_reporting_tick' );
 remove_filter( 'pre_http_request', $guard, 10 );
 if ( $contact !== array() ) {
     WP_CLI::error( 'Core functionality generated optional service calls without consent' );

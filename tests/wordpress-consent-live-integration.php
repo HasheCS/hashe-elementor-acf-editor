@@ -12,9 +12,11 @@ require_once ABSPATH . 'wp-admin/includes/template.php';
 $stage = getenv( 'HASHE_QA_CONSENT_STAGE' );
 $option = 'hashe_acf_optional_reporting_v1';
 $hook = 'hashe_acf_optional_reporting_tick';
-$slug = 'hashe-elementor-acf-editor';
+$slug = getenv( 'HASHE_QA_DISTRIBUTION' ) === 'wordpress-org'
+    ? 'hashe-field-editor'
+    : 'hashe-elementor-acf-editor';
 $client = new \Hashe\FieldEditor\PluginTools\V1\ConsentClient(
-    $slug, 'hashe-elementor-acf-editor/hashe-elementor-acf-editor.php'
+    $slug, $slug . '/' . $slug . '.php'
 );
 wp_set_current_user( 1 );
 if ( ! current_user_can( 'manage_options' ) ) {
