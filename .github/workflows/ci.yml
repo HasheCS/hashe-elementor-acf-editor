@@ -64,6 +64,35 @@ jobs:
           node tests/dirty-save.cjs
           node tests/delayed-baseline.cjs
 
+  cross-plugin-coexistence:
+    name: "Pinned FA7 + Field Editor embedded client QA / PHP \${{ matrix.php }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: \${{ matrix.php }}
+          tools: none
+      - name: Verify pinned FA7 draft and both plugin client namespaces
+        shell: bash
+        run: |
+          ( clear
+            set -euo pipefail
+            echo '=== PINNED CROSS-PLUGIN CLIENT COEXISTENCE TEST ==='
+            fa7_head=a2b423ee8e137bff70b4ceb89d6b36a0424b5f92
+            git clone --quiet --no-checkout https://github.com/HasheCS/hashe-fa7-elementor.git "$RUNNER_TEMP/fa7"
+            git -C "$RUNNER_TEMP/fa7" checkout --quiet --detach "$fa7_head"
+            test "$(git -C "$RUNNER_TEMP/fa7" rev-parse HEAD)" = "$fa7_head"
+            php -l tests/cross-plugin-client-coexistence.php
+            php tests/cross-plugin-client-coexistence.php "$RUNNER_TEMP/fa7/hashe-fa7-elementor"
+            echo 'HP_PLUGINS_PINNED_FA7_AND_FIELD_EDITOR_QA=PASS'
+          )
+
   distribution-candidates:
     runs-on: ubuntu-latest
     steps:
