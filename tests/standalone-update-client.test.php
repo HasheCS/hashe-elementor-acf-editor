@@ -20,6 +20,7 @@ function wp_delete_file( $path ) {
 
 $GLOBALS['qa_http_calls'] = array();
 $GLOBALS['qa_cache'] = array();
+$GLOBALS['qa_cache_ttl'] = array();
 $GLOBALS['qa_response'] = null;
 $GLOBALS['qa_filters'] = array();
 
@@ -31,6 +32,7 @@ function get_site_transient( $key ) {
 }
 function set_site_transient( $key, $value, $ttl ) {
     $GLOBALS['qa_cache'][ $key ] = $value;
+    $GLOBALS['qa_cache_ttl'][ $key ] = $ttl;
     return true;
 }
 function wp_remote_get( $url, $args ) {
@@ -46,6 +48,9 @@ function wp_remote_retrieve_response_code( $response ) {
 function wp_remote_retrieve_body( $response ) {
     return $response['body'] ?? '';
 }
+function wp_remote_retrieve_header( $response, $key ) {
+    return $response['headers'][ $key ] ?? '';
+}
 function qa_assert( $yes, $description ) {
     if ( ! $yes ) {
         fwrite( STDERR, 'FAIL ' . $description . PHP_EOL );
@@ -55,6 +60,7 @@ function qa_assert( $yes, $description ) {
 }
 function qa_reset( $response ) {
     $GLOBALS['qa_cache'] = array();
+$GLOBALS['qa_cache_ttl'] = array();
     $GLOBALS['qa_http_calls'] = array();
     $GLOBALS['qa_response'] = $response;
 }
@@ -73,6 +79,7 @@ $manifest = array(
     'details_url' => 'https://github.com/HasheCS/' . $slug . '/releases/tag/v' . $ver,
     'package_url' => 'https://github.com/HasheCS/' . $slug . '/releases/download/v' . $ver . '/' . $slug . '-v' . $ver . '.zip',
     'tested' => '7.1',
+    'requires' => '6.5',
     'requires_php' => '7.4',
 );
 $client_file = dirname( __DIR__ ) . '/distribution/independent/hashe-core/v1/update-client.php';
@@ -87,6 +94,8 @@ qa_reset( array( 'code' => 200, 'body' => json_encode( $manifest ) ) );
 $result = $client->check( false, $headers, $slug . '/' . $slug . '.php', array( 'en_US' ) );
 qa_assert( is_array( $result ) && $result['version'] === $ver, 'approved stable update offered' );
 qa_assert( $result['package'] === $manifest['package_url'], 'exact approved GitHub release asset offered' );
+qa_assert( $result['requires'] === '6.5', 'WordPress minimum exposed through native updater' );
+qa_assert( $GLOBALS['qa_cache_ttl']['hashe_v1_update_' . $slug] === 300, 'approved feed cached at most 300 seconds' );
 qa_assert( ! isset( $result['autoupdate'] ), 'no forced automatic updates' );
 qa_assert( count( $GLOBALS['qa_http_calls'] ) === 1, 'one metadata request' );
 $req = $GLOBALS['qa_http_calls'][0];
@@ -104,6 +113,11 @@ foreach ( array(
     'foreign_package' => array( 'package_url' => 'https://other-host.example/plugin.zip' ),
     'wrong_tag' => array( 'tag' => 'v0.0.1' ),
     'missing_sha' => array( 'sha256' => '' ),
+    'missing_wordpress_requirement' => array( 'requires' => null ),
+    'inconsistent_wordpress_aliases' => array( 'requires_wordpress' => '6.4' ),
+    'tested_below_required' => array( 'tested' => '6.4' ),
+    'wrong_zip_channel' => array( 'package_url' => 'https://github.com/HasheCS/' . $slug . '/releases/download/v' . $ver . '/' . $slug . '-v' . $ver . '-wporg.zip' ),
+    'zip_query_injection' => array( 'package_url' => $manifest['package_url'] . '?download=1' ),
 ) as $description => $changes ) {
     $modified = array_merge( $manifest, $changes );
     qa_reset( array( 'code' => 200, 'body' => json_encode( $modified ) ) );
@@ -128,7 +142,29 @@ $bad = $client->verify_download( false, $manifest['package_url'], null, $extra )
 qa_assert( $bad instanceof WP_Error && $bad->code === 'hashe_acf_checksum_failed', 'tampered ZIP blocked before installation' );
 qa_assert( ! file_exists( $GLOBALS['qa_deleted_file'] ), 'tampered ZIP file removed' );
 unset( $GLOBALS['qa_cache']['hashe_v1_update_' . $slug] );
+$GLOBALS['qa_response'] = array( 'code' => 503, 'body' => '' );
 $missing = $client->verify_download( false, $manifest['package_url'], null, $extra );
 qa_assert( $missing instanceof WP_Error && $missing->code === 'hashe_acf_unverified_update', 'missing approved metadata blocks package' );
+
+
+$alternative = $manifest;
+$alternative['package_url'] = 'https://github.com/HasheCS/' . $slug . '/releases/download/v' . $ver . '/' . $slug . '-stable-v' . $ver . '.zip';
+qa_reset( array( 'code' => 200, 'body' => json_encode( $alternative ), 'headers' => array( 'cache-control' => 'public, max-age=120' ) ) );
+$offer_alt = $client->check( false, $headers, $slug . '/' . $slug . '.php', array() );
+qa_assert( is_array( $offer_alt ) && $offer_alt['package'] === $alternative['package_url'],
+    'authoritatively approved non-default independent filename accepted' );
+qa_assert( $GLOBALS['qa_cache_ttl']['hashe_v1_update_' . $slug] === 120,
+    'shorter backend Cache-Control is honored' );
+qa_reset( array( 'code' => 200, 'body' => json_encode( $manifest ), 'headers' => array( 'cache-control' => 'no-store' ) ) );
+qa_assert( $client->check( false, $headers, $slug . '/' . $slug . '.php', array() ) === false,
+    'no-store metadata is not treated as a durable approved update offer' );
+
+qa_reset( array( 'code' => 200, 'body' => json_encode( $manifest ) ) );
+$client->check( false, $headers, $slug . '/' . $slug . '.php', array() );
+unset( $GLOBALS['qa_cache']['hashe_v1_update_' . $slug] );
+$refetched = $client->verify_download( false, $manifest['package_url'], null, $extra );
+qa_assert( is_string( $refetched ) && is_file( $refetched ),
+    'expired metadata revalidated before download and SHA verification' );
+unlink( $refetched );
 
 echo "HASHE_UPDATE_CLIENT_TESTS=PASS\n";
