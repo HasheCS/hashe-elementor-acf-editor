@@ -26,10 +26,17 @@ function qa_assert( $ok, $name ) {
 
 $acf = dirname( __DIR__ ) . '/distribution/independent/hashe-core/v1/';
 $fa7 = rtrim( $argv[1], '/' ) . '/includes/hashe-core/v1/';
-foreach ( array(
+$module_paths = array(
     $acf . 'update-client.php', $acf . 'consent-client.php',
     $fa7 . 'update-client.php', $fa7 . 'consent-client.php',
-) as $path ) {
+);
+if ( ( $argv[2] ?? '' ) === 'fa7-first' ) {
+    $module_paths = array(
+        $fa7 . 'update-client.php', $fa7 . 'consent-client.php',
+        $acf . 'update-client.php', $acf . 'consent-client.php',
+    );
+}
+foreach ( $module_paths as $path ) {
     qa_assert( is_file( $path ), 'required pinned module file exists' );
     require $path;
 }
