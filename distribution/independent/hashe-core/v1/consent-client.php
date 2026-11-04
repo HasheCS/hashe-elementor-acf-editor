@@ -5,7 +5,7 @@
  * This module is bundled with the plugin and contains NO enabled reporting
  * service, site identifiers, credentials, or mandatory analytics.
  */
-namespace Hashe\PluginTools\V1;
+namespace Hashe\FieldEditor\PluginTools\V1;
 
 defined( 'ABSPATH' ) || exit;
 
