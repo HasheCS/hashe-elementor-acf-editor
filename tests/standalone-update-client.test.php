@@ -84,7 +84,7 @@ $manifest = array(
 );
 $client_file = dirname( __DIR__ ) . '/distribution/independent/hashe-core/v1/update-client.php';
 require $client_file;
-$client = new \Hashe\PluginTools\V1\UpdateClient(
+$client = new \Hashe\FieldEditor\PluginTools\V1\UpdateClient(
     $slug, $slug . '/' . $slug . '.php', $uri, $endpoint
 );
 $client->register();
