@@ -13,7 +13,7 @@ $stage = getenv( 'HASHE_QA_CONSENT_STAGE' );
 $option = 'hashe_acf_optional_reporting_v1';
 $hook = 'hashe_acf_optional_reporting_tick';
 $slug = 'hashe-elementor-acf-editor';
-$client = new \Hashe\PluginTools\V1\ConsentClient(
+$client = new \Hashe\FieldEditor\PluginTools\V1\ConsentClient(
     $slug, 'hashe-elementor-acf-editor/hashe-elementor-acf-editor.php'
 );
 wp_set_current_user( 1 );
