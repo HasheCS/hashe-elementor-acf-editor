@@ -36,6 +36,7 @@ jobs:
           php -l tests/wordpress-live-integration.php
           php -l tests/wordpress-native-update-simulation.php
           php -l tests/wordpress-consent-live-integration.php
+          php -l tests/wordpress-fa7-wporg-coexistence-v12.php
           php -l tests/wordpress-acf-ajax-integration.php
           php -l tests/wordpress-elementor-controls-integration.php
           php -l tests/staging-browser-fixture.php
