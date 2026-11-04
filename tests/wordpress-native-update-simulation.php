@@ -41,6 +41,7 @@ $manifest = array(
     'details_url'  => 'https://github.com/HasheCS/hashe-elementor-acf-editor/releases/tag/v0.6.1',
     'package_url'  => $package,
     'tested'       => '7.1',
+    'requires'     => '6.5',
     'requires_php' => '7.4',
 );
 $good_sha = $manifest['sha256'];
