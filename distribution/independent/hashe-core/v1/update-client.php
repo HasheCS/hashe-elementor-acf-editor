@@ -40,37 +40,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\UpdateClient', false ) ) {
                 return false;
             }
 
-            $cache_key = 'hashe_v1_update_' . $this->slug;
-            $manifest  = get_site_transient( $cache_key );
-            if ( ! is_array( $manifest ) ) {
-                $result = wp_remote_get(
-                    $this->feed_uri,
-                    array(
-                        'timeout'             => 4,
-                        'redirection'         => 0,
-                        'sslverify'           => true,
-                        'limit_response_size' => 32768,
-                        'user-agent'         => 'Hashe-Plugin-UpdateClient/1.0',
-                        'headers'             => array( 'Accept' => 'application/json' ),
-                    )
-                );
-                if ( is_wp_error( $result ) ||
-                    200 !== (int) wp_remote_retrieve_response_code( $result ) ) {
-                    return false;
-                }
-                $body = (string) wp_remote_retrieve_body( $result );
-                if ( strlen( $body ) < 40 || strlen( $body ) > 32768 ) {
-                    return false;
-                }
-                $manifest = json_decode( $body, true );
-                if ( ! is_array( $manifest ) || ! $this->valid_manifest( $manifest ) ) {
-                    return false;
-                }
-                // Only validated, explicitly approved stable metadata is cached.
-                set_site_transient( $cache_key, $manifest, 6 * HOUR_IN_SECONDS );
-            }
-            if ( ! $this->valid_manifest( $manifest ) ||
-                version_compare( $manifest['version'], $installed, '<=' ) ) {
+            $manifest = $this->approved_manifest();
+            if ( ! $manifest || version_compare( $manifest['version'], $installed, '<=' ) ) {
                 return false;
             }
 
@@ -81,10 +52,56 @@ if ( ! class_exists( __NAMESPACE__ . '\\UpdateClient', false ) ) {
                 'url'          => $manifest['details_url'],
                 'package'      => $manifest['package_url'],
                 'tested'       => $manifest['tested'],
+                'requires'     => $manifest['requires'] ?? $manifest['requires_wordpress'],
                 'requires_php' => $manifest['requires_php'],
             );
         }
 
+
+        /** Load only validated, approved stable metadata (no site identity or telemetry). */
+        private function approved_manifest() {
+            $key = 'hashe_v1_update_' . $this->slug;
+            $cached = get_site_transient( $key );
+            if ( is_array( $cached ) && $this->valid_manifest( $cached ) ) {
+                return $cached;
+            }
+
+            $response = wp_remote_get( $this->feed_uri, array(
+                'timeout'             => 4,
+                'redirection'         => 0,
+                'sslverify'           => true,
+                'limit_response_size' => 32768,
+                'user-agent'          => 'Hashe-Plugin-UpdateClient/1.0',
+                'headers'             => array( 'Accept' => 'application/json' ),
+            ) );
+            if ( is_wp_error( $response ) ||
+                200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+                return false;
+            }
+            $body = (string) wp_remote_retrieve_body( $response );
+            if ( strlen( $body ) < 40 || strlen( $body ) > 32768 ) {
+                return false;
+            }
+            $manifest = json_decode( $body, true );
+            if ( ! is_array( $manifest ) || ! $this->valid_manifest( $manifest ) ) {
+                return false;
+            }
+
+            $header = wp_remote_retrieve_header( $response, 'cache-control' );
+            $cache_control = is_string( $header ) ? $header : '';
+            if ( preg_match( '/(?:^|,)\s*(?:no-store|private)\b/i', $cache_control ) ) {
+                return false;
+            }
+            $ttl = 300;
+            if ( preg_match( '/(?:^|,)\s*max-age\s*=\s*(\d+)/i', $cache_control, $match ) ) {
+                $ttl = min( 300, (int) $match[1] );
+            }
+            if ( $ttl < 1 ) {
+                return false;
+            }
+            set_site_transient( $key, $manifest, $ttl );
+            return $manifest;
+        }
 
         /**
          * Verify the exact published GitHub ZIP against the approved feed
@@ -99,10 +116,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\UpdateClient', false ) ) {
                 ( $hook_extra['plugin'] ?? '' ) !== $this->plugin_file ) {
                 return $reply;
             }
-            $manifest = get_site_transient( 'hashe_v1_update_' . $this->slug );
-            if ( ! is_array( $manifest ) ||
-                ! $this->valid_manifest( $manifest ) ||
-                $package !== $manifest['package_url'] ) {
+            $manifest = $this->approved_manifest();
+            if ( ! $manifest || $package !== $manifest['package_url'] ) {
                 return new \WP_Error(
                     'hashe_acf_unverified_update',
                     'The approved Hashe update metadata is unavailable or does not match this package.'
