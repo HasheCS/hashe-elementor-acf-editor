@@ -5,7 +5,7 @@
  * The website-owned HP-WEB-001 approved-release feed is the sole authority. Independent package ONLY; excluded from the WordPress.org build.
  * This module never contacts a site-registration or analytics endpoint.
  */
-namespace Hashe\PluginTools\V1;
+namespace Hashe\FieldEditor\PluginTools\V1;
 
 defined( 'ABSPATH' ) || exit;
 
