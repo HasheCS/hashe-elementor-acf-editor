@@ -107,9 +107,10 @@ switch ( $stage ) {
         qa_consent_assert( $payload['installation_id'] === $state['installation_id'] && $payload['plugin'] === $slug, 'Report identity mismatched' );
         qa_consent_assert( ! isset( $payload['email'] ) && ! isset( $payload['password'] ), 'Sensitive fields disclosed' );
         $enrollment = json_decode( $log[0]['body'], true );
+        $updated_state = get_option( $option, array() );
         qa_consent_assert( is_array( $enrollment ) && isset( $enrollment['site_proof_url'] ) &&
             $enrollment['installation_id'] === $state['installation_id'] &&
-            ! empty( $state['enrolled'] ), 'Site-proof enrollment did not precede reporting' );
+            ! empty( $updated_state['enrolled'] ), 'Site-proof enrollment did not precede reporting' );
         break;
     case 'offline':
         qa_consent_assert( is_array( $state ) && $state['status'] === 'allowed', 'Offline check has no consent state' );
