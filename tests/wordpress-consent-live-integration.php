@@ -29,6 +29,7 @@ $contract = array(
     'cadence' => 'Every 30 days',
     'report_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/report',
     'revoke_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/revoke',
+    'enroll_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/enroll',
     'authenticated_headers' => static function ( $mode ) {
         return array( 'Authorization' => 'Bearer ' . str_repeat( 'q', 40 ) );
     },
@@ -39,7 +40,7 @@ if ( ! in_array( $stage, array( 'default', 'skip', 'skipped', 'offline' ), true 
     } );
 }
 add_filter( 'pre_http_request', static function ( $pre, $args, $url ) use ( $stage, $contract ) {
-    if ( $url !== $contract['report_endpoint'] && $url !== $contract['revoke_endpoint'] ) {
+    if ( ! in_array( $url, array( $contract['enroll_endpoint'], $contract['report_endpoint'], $contract['revoke_endpoint'] ), true ) ) {
         if ( 0 === strpos( $url, 'https://plugins.hashe.com/' ) ) {
             return new WP_Error( 'qa_unexpected_hashe_url', 'No external Hashe service in QA' );
         }
@@ -100,16 +101,20 @@ switch ( $stage ) {
         qa_consent_assert( isset( $state['installation_id'] ) && wp_next_scheduled( $hook ), 'Identifier / scheduled reporting missing' );
         do_action( $hook );
         $log = get_option( 'hashe_acf_qa_http_log', array() );
-        qa_consent_assert( count( $log ) === 1 && $log[0]['url'] === $contract['report_endpoint'], 'Expected exactly one mock report' );
-        $payload = json_decode( $log[0]['body'], true );
-        qa_consent_assert( is_array( $payload ) && count( $payload ) === 6, 'Report fields do not match disclosure' );
-        qa_consent_assert( $payload['installation_id'] === $state['installation_id'] && $payload['plugin_slug'] === $slug, 'Report identity mismatched' );
+        qa_consent_assert( count( $log ) === 2 && $log[0]['url'] === $contract['enroll_endpoint'] && $log[1]['url'] === $contract['report_endpoint'], 'Expected exactly one mock report' );
+        $payload = json_decode( $log[1]['body'], true );
+        qa_consent_assert( is_array( $payload ) && count( $payload ) === 5, 'Report fields do not match disclosure' );
+        qa_consent_assert( $payload['installation_id'] === $state['installation_id'] && $payload['plugin'] === $slug, 'Report identity mismatched' );
         qa_consent_assert( ! isset( $payload['email'] ) && ! isset( $payload['password'] ), 'Sensitive fields disclosed' );
+        $enrollment = json_decode( $log[0]['body'], true );
+        qa_consent_assert( is_array( $enrollment ) && isset( $enrollment['site_proof_url'] ) &&
+            $enrollment['installation_id'] === $state['installation_id'] &&
+            ! empty( $state['enrolled'] ), 'Site-proof enrollment did not precede reporting' );
         break;
     case 'offline':
         qa_consent_assert( is_array( $state ) && $state['status'] === 'allowed', 'Offline check has no consent state' );
         do_action( $hook );
-        qa_consent_assert( count( get_option( 'hashe_acf_qa_http_log', array() ) ) === 1, 'Report sent when contract unavailable' );
+        qa_consent_assert( count( get_option( 'hashe_acf_qa_http_log', array() ) ) === 2, 'Report sent when contract unavailable' );
         break;
     case 'revoke-fail':
         qa_consent_choice( $client, 'revoke' );
@@ -122,7 +127,7 @@ switch ( $stage ) {
         qa_consent_assert( strpos( $page, 'name="hashe_acf_choice" value="skip"' ) === false, 'Skip offered during pending deletion' );
         qa_consent_assert( strpos( $page, 'name="hashe_acf_choice" value="allow"' ) === false, 'Allow offered during pending deletion' );
         do_action( $hook );
-        qa_consent_assert( count( get_option( 'hashe_acf_qa_http_log', array() ) ) === 2, 'Revoked site reported again' );
+        qa_consent_assert( count( get_option( 'hashe_acf_qa_http_log', array() ) ) === 3, 'Revoked site reported again' );
         break;
     case 'skip-pending':
         qa_consent_choice( $client, 'skip' );
@@ -142,8 +147,8 @@ switch ( $stage ) {
         qa_consent_assert( ! wp_next_scheduled( $hook ), 'Revoked site still schedules reports' );
         do_action( $hook );
         $log = get_option( 'hashe_acf_qa_http_log', array() );
-        qa_consent_assert( count( $log ) === 3 && $log[1]['url'] === $contract['revoke_endpoint'] && $log[2]['url'] === $contract['revoke_endpoint'], 'Deletion was not retried correctly' );
-        qa_consent_assert( $log[1]['body'] === $log[2]['body'], 'Retry changed the target installation identifier' );
+        qa_consent_assert( count( $log ) === 4 && $log[2]['url'] === $contract['revoke_endpoint'] && $log[3]['url'] === $contract['revoke_endpoint'], 'Deletion was not retried correctly' );
+        qa_consent_assert( $log[2]['body'] === $log[3]['body'], 'Retry changed the target installation identifier' );
         break;
     default:
         WP_CLI::error( 'Unsupported integration QA stage: ' . $stage );
