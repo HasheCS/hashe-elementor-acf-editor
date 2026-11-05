@@ -70,6 +70,7 @@ jobs:
           php tests/php-smoke.php
           php tests/standalone-update-client.test.php
           php tests/standalone-consent-client.test.php
+          php tests/site-proof.test.php
           node --check assets/editor-native.js
           node tests/js-smoke.cjs
           node tests/dirty-save.cjs
