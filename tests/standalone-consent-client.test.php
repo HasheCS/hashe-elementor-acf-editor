@@ -35,8 +35,16 @@ function is_wp_error( $value ) { return false; }
 function wp_remote_retrieve_response_code( $response ) { return $response['response']['code'] ?? 0; }
 function wp_json_encode( $v ) { return json_encode( $v ); }
 function get_site_url() { return 'https://client.example/'; }
+function rest_url( $route ) { return 'https://client.example/wp-json/' . ltrim( $route, '/' ); }
 function get_file_data( $p, $fields ) { return array( 'Version' => '0.6.0' ); }
 function wp_generate_uuid4() { return '11111111-1111-4111-8111-111111111111'; }
+function check_admin_referer( $action ) { return true; }
+function sanitize_key( $value ) { return strtolower((string)$value); }
+function sanitize_text_field( $value ) { return (string)$value; }
+function wp_unslash( $value ) { return $value; }
+class QaExit extends Exception {}
+function wp_safe_redirect( $url ) { throw new QaExit( 'redirect_after_choice' ); }
+function wp_die( $message, $title = '', $args = array() ) { throw new RuntimeException( 'wp_die:' . $message ); }
 define( 'WP_PLUGIN_DIR', __DIR__ . '/qa-plugins' );
 
 require dirname( __DIR__ ) . '/distribution/independent/hashe-core/v1/consent-client.php';
@@ -73,9 +81,7 @@ $GLOBALS['qa_contract'] = array(
     'cadence' => 'Every 30 days',
     'report_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/report',
     'revoke_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/revoke',
-    'authenticated_headers' => function ( $mode ) {
-        return array( 'Authorization' => 'Bearer ' . str_repeat( 'a', 32 ) );
-    },
+    'enroll_endpoint' => 'https://plugins.hashe.com/api/v1/telemetry/enroll',
 );
 ob_start();
 $client->settings_page();
@@ -83,38 +89,62 @@ $page = ob_get_clean();
 qa( strpos( $page, 'Allow & Continue' ) !== false, 'Allow form only with approved contract and unchecked opt-in checkbox' );
 qa( strpos( $page, 'type="checkbox"' ) !== false && strpos( $page, 'checked' ) === false, 'opt-in checkbox initially unchecked' );
 
-update_option( 'hashe_acf_optional_reporting_v1', array(
-    'status' => 'allowed', 'at' => time(), 'policy_version' => 'v1-approved',
-    'installation_id' => '11111111-1111-4111-8111-111111111111',
-), false );
-$client->send_report();
-qa( count( $GLOBALS['qa_remote'] ) === 1, 'one optional report follows consent and approved contract' );
-$req = $GLOBALS['qa_remote'][0];
-qa( $req['url'] === $GLOBALS['qa_contract']['report_endpoint'], 'outbound telemetry destination is pinned' );
-$payload = json_decode( $req['options']['body'], true );
-qa( $payload['site_url'] === 'https://client.example/' &&
-    $payload['plugin_version'] === '0.6.0' &&
-    $payload['status'] === 'last-reported-active', 'minimal disclosed status payload' );
-qa( count( $payload ) === 6 &&
-    ! isset( $payload['email'] ) && ! isset( $payload['token'] ),
-    'no subscriber, content or credential included in payload' );
-qa( ! empty( $GLOBALS['qa_scheduled']['hashe_acf_optional_reporting_tick'] ), 'next report scheduled after success' );
 
-update_option( 'hashe_acf_optional_reporting_v1', array( 'status' => 'revocation-pending' ), false );
+$_POST = array('hashe_acf_choice'=>'allow','hashe_acf_explicit_consent'=>'1');
+try { $client->handle_admin_choice(); qa(false,'Allow should redirect'); }
+catch(QaExit $ex) { qa(true,'Allow accepted only through verified admin action'); }
+$state=get_option('hashe_acf_optional_reporting_v1');
+qa( $state['status']==='allowed' && preg_match('/^[0-9a-f]{64}$/D',$state['secret_hex'])===1,
+    'first Allow creates random site-local 256-bit secret' );
+qa( isset($state['consented_at_utc']) && ($state['enrolled']??true)===false,
+    'Allow records timestamp and does not self-enroll' );
+qa( $GLOBALS['qa_remote']===array(),'Allow does not synchronously contact reporting backend' );
 $client->send_report();
-qa( count( $GLOBALS['qa_remote'] ) === 1, 'revocation immediately blocks reporting' );
+qa( count($GLOBALS['qa_remote'])===2, 'first opt-in triggers verified enrollment then first report' );
+$enroll=$GLOBALS['qa_remote'][0];
+$report=$GLOBALS['qa_remote'][1];
+qa( $enroll['url']===$GLOBALS['qa_contract']['enroll_endpoint'] &&
+    $report['url']===$GLOBALS['qa_contract']['report_endpoint'],
+    'enroll/report destination both pinned and ordered' );
+qa( $enroll['options']['headers']['Authorization']==='Bearer '.$state['secret_hex'],
+    'request token derived solely from locally consented site secret' );
+$body=json_decode($report['options']['body'],true);
+qa( $body['plugin']==='hashe-elementor-acf-editor' && $body['version']==='0.6.0' &&
+    $body['consent']['granted']===true && $body['consent']['notice_version']==='v1-approved',
+    'backend report schema binds plugin/version/notice and explicit consent' );
+qa( count($body)===5 && !isset($body['email']) && !isset($body['password']),
+    'optional report sends no email/content/password' );
+qa( get_option('hashe_acf_optional_reporting_v1')['enrolled']===true,
+    'enrollment status persisted only after successful server response' );
+qa( !empty($GLOBALS['qa_scheduled']['hashe_acf_optional_reporting_tick']),
+    'next report scheduled after consented reporting' );
+
+$_POST = array('hashe_acf_choice'=>'revoke');
+try {$client->handle_admin_choice();qa(false,'Revoke should redirect');}
+catch(QaExit $ex){qa(true,'Revoke action accepted via admin approval');}
+qa( count($GLOBALS['qa_remote'])===3 &&
+    $GLOBALS['qa_remote'][2]['url']==='https://plugins.hashe.com/api/v1/telemetry/revoke',
+    'revoke posts deletion to fixed endpoint' );
+qa( get_option('hashe_acf_optional_reporting_v1')['status']==='revoked',
+    'successful revocation clears local active installation credential' );
+$client->send_report();
+qa( count($GLOBALS['qa_remote'])===3, 'revocation immediately stops all further reports' );
 \Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_deactivation();
-qa( $GLOBALS['qa_scheduled'] === array(), 'deactivation removes optional telemetry cron event' );
+qa( $GLOBALS['qa_scheduled']===array(), 'deactivation removes optional telemetry cron event' );
 \Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_activation();
-qa( $GLOBALS['qa_scheduled'] === array(), 'revoked consent never silently restored after reactivation' );
+qa( $GLOBALS['qa_scheduled']===array(), 'revoked consent never silently reactivates' );
 
-$GLOBALS['qa_contract']['report_endpoint'] = 'https://evil.example/collect';
-update_option( 'hashe_acf_optional_reporting_v1', array(
-    'status' => 'allowed', 'policy_version' => 'v1-approved',
-    'installation_id' => '11111111-1111-4111-8111-111111111111',
-), false );
+$GLOBALS['qa_contract']['report_endpoint']='https://evil.example/collect';
+update_option('hashe_acf_optional_reporting_v1', array(
+    'status'=>'allowed', 'policy_version'=>'v1-approved',
+    'installation_id'=>'11111111-1111-4111-8111-111111111111',
+    'secret_hex'=>str_repeat('b',64),
+    'consented_at_utc'=>gmdate('Y-m-d\\TH:i:s\\Z'),
+    'enrolled'=>true,
+), false);
 $client->send_report();
-qa( count( $GLOBALS['qa_remote'] ) === 1, 'unapproved endpoint blocked despite stored consent' );
+qa( count($GLOBALS['qa_remote'])===3,'unapproved endpoint never receives report');
 \Hashe\FieldEditor\PluginTools\V1\ConsentClient::on_uninstall();
-qa( get_option( 'hashe_acf_optional_reporting_v1', false ) === false, 'uninstall removes local consent state' );
+qa( get_option('hashe_acf_optional_reporting_v1',false)===false,
+    'uninstall removes local consent state' );
 echo "CONSENT_SECURITY_AND_LIFECYCLE_TESTS=PASS\n";
