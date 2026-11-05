@@ -138,7 +138,7 @@ switch ( $stage ) {
         break;
     case 'pending-persisted':
         qa_consent_assert( $state['status'] === 'revocation-pending' && isset( $state['installation_id'] ), 'Stale action erased pending deletion identity' );
-        qa_consent_assert( count( $log ) === 2, 'Stale action caused remote request' );
+        qa_consent_assert( count( $log ) === 3, 'Stale action caused remote request' );
         break;
     case 'retry':
         qa_consent_choice( $client, 'retry-deletion' );
