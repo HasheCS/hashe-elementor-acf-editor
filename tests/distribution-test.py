@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Offline, read-only QA for the two unpublished distribution candidates."""
+import hashlib
+import tempfile
+from pathlib import Path
+from zipfile import ZipFile
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from build_distributions import ORG_SLUG, GITHUB_SLUG, source_version, build
+
+version = source_version()
+with tempfile.TemporaryDirectory(prefix="hashe-acf-qa-") as temporary:
+    folder = Path(temporary)
+    build(folder)
+    org = folder / f"{ORG_SLUG}-v{version}-wporg.zip"
+    ind = folder / f"{GITHUB_SLUG}-v{version}.zip"
+    assert org.is_file() and ind.is_file()
+    with ZipFile(org) as z:
+        entries = set(z.namelist())
+        assert len(entries) == 8, entries
+        main = z.read(f"{ORG_SLUG}/{ORG_SLUG}.php").decode()
+        readme = z.read(f"{ORG_SLUG}/readme.txt").decode()
+        extended = z.read(f"{ORG_SLUG}/includes/extended-fields.php").decode()
+        assert "Plugin Name: Hashe Field Editor" in main
+        assert readme.startswith("=== Hashe Field Editor ===")
+        assert ORG_SLUG == "hashe-field-editor"
+        assert "Text Domain: " + ORG_SLUG in main
+        assert "Requires Plugins: elementor, advanced-custom-fields" in main
+        assert "Update URI:" not in main
+        assert "standalone-bootstrap" not in main
+        assert "require_once __DIR__ . '/includes/consent-bootstrap.php';" in main
+        org_bootstrap = z.read(f"{ORG_SLUG}/includes/consent-bootstrap.php").decode()
+        org_consent = z.read(f"{ORG_SLUG}/includes/hashe-core/v1/consent-client.php").decode()
+        assert r"\Hashe\FieldEditor\PluginTools\V1\ConsentClient" in org_bootstrap
+        assert "hashe_acf_optional_reporting_v1" in org_consent
+        assert "hashe_acf_privacy_choice" in org_consent
+        assert "/api/v1/telemetry/report" in org_consent
+        assert not any(x.endswith("/update-client.php") for x in entries)
+        assert "update_plugins_plugins.hashe.com" not in main + readme + extended + org_bootstrap + org_consent
+        assert "Update URI:" not in main + org_bootstrap + org_consent
+        assert GITHUB_SLUG + ".php" not in entries
+        assert "github.com/HasheCS/" + GITHUB_SLUG in main + readme
+        assert "Stable tag: " + version in readme
+        assert all(x.startswith(ORG_SLUG + "/") for x in entries)
+        assert z.testzip() is None
+    with ZipFile(ind) as z:
+        entries = set(z.namelist())
+        assert len(entries) == 9, entries
+        main = z.read(f"{GITHUB_SLUG}/{GITHUB_SLUG}.php").decode()
+        bootstrap = z.read(f"{GITHUB_SLUG}/includes/standalone-bootstrap.php").decode()
+        update = z.read(f"{GITHUB_SLUG}/includes/hashe-core/v1/update-client.php").decode()
+        consent = z.read(f"{GITHUB_SLUG}/includes/hashe-core/v1/consent-client.php").decode()
+        assert "Requires Plugins: elementor, advanced-custom-fields" in main
+        assert "Update URI: https://plugins.hashe.com/" + GITHUB_SLUG + "/" in main
+        assert "require_once __DIR__ . '/includes/standalone-bootstrap.php';" in main
+        assert "update_plugins_plugins.hashe.com" in update
+        assert "https://plugins.hashe.com/api/v1/updates/" + GITHUB_SLUG in bootstrap
+        assert "/api/v1/plugins/" not in bootstrap
+        assert "hash_file( 'sha256'" in update and "hash_equals" in update
+        assert "'allowed'" in consent and "'revocation-pending'" in consent
+        assert "hashe_acf_optional_reporting" in consent
+        assert "Hashe Font Awesome" not in consent
+        assert f"{GITHUB_SLUG}/{GITHUB_SLUG}.php" in entries
+        assert z.testzip() is None
+        assert all(x.startswith(GITHUB_SLUG + "/") for x in entries)
+    # Build independently a second time; both copies must be byte-identical.
+    # ZIP entries must not inherit filesystem, builder clock or OS metadata.
+    again = folder / "second-independent-build"
+    build(again)
+    for archive in (org, ind):
+        duplicate = again / archive.name
+        assert archive.read_bytes() == duplicate.read_bytes(), (
+            f"Nonreproducible package: {archive.name}"
+        )
+        with ZipFile(archive) as checked:
+            for member in checked.infolist():
+                assert member.date_time == (1980, 1, 1, 0, 0, 0), member
+                assert (member.external_attr >> 16) == 0o100644, member
+                assert member.compress_type == 8, member
+    print("PASS: two independent builds are byte-identical with pinned ZIP metadata")
+
+    manifest = (folder / "SHA256SUMS.txt").read_text()
+    assert len(manifest.splitlines()) == 2
+    for archive in [org, ind]:
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        assert f"{digest}  {archive.name}" in manifest
+    print("PASS: plugin dependencies and consistent candidate versions")
+    print("PASS: directory package has slug/text domain, default-off consent and NO independent updater")
+    print("PASS: independent package preserves old folder identity and adds checksum-gated updater")
+    print("PASS: opt-in reporting stays separate from WordPress update requests")
+    print("PASS: both ZIP files valid and SHA256 manifest agrees")
+
+release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+assert "workflow_dispatch:" in release_workflow
+assert "push:\n    tags:" not in release_workflow
+assert "refs/heads/main" in release_workflow
+assert "git rev-list -n 1" in release_workflow
+assert "gh release view" in release_workflow
+assert "python3 tools/build_distributions.py --output dist-release" in release_workflow
+assert "softprops/action-gh-release@v2" in release_workflow
+print("PASS: release workflow requires manual approval and independent ZIP builder")

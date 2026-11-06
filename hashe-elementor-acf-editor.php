@@ -1,14 +1,15 @@
 <?php
 /**
- * Plugin Name: Hashe Elementor ACF Editor
+ * Plugin Name: Hashe Field Editor
  * Description: Native Elementor Page Settings controls backed by ACF fields. No iframe or embedded ACF form.
- * Version: 0.5.1
+ * Version: 0.6.0
  * Author: Hashe Computer Solutions (Pvt) Ltd
  * Author URI: https://www.hashe.com/
  * Plugin URI: https://github.com/HasheCS/hashe-elementor-acf-editor
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * Requires at least: 5.8
+ * Requires at least: 6.5
+ * Requires Plugins: elementor, advanced-custom-fields
  * Requires PHP: 7.4
  * Text Domain: hashe-elementor-acf-editor
  */
@@ -17,7 +18,7 @@ require_once __DIR__ . '/includes/extended-fields.php';
 
 final class Hashe_Elementor_ACF_Editor {
     use Hashe_ACF_Extended_Controls;
-    const VERSION = '0.5.1';
+    const VERSION = '0.6.0';
     const TAB_ID = 'heae_acf';
     const CONTROL_PREFIX = 'heae_acf_';
     const NONCE_ACTION = 'heae_save_acf_';
@@ -56,7 +57,7 @@ final class Hashe_Elementor_ACF_Editor {
     public function dependency_notice() {
         if ( current_user_can( 'activate_plugins' ) ) {
             echo '<div class="notice notice-error"><p>' .
-                esc_html__( 'Hashe Elementor ACF Editor requires Elementor and Advanced Custom Fields (ACF or ACF Pro).', 'hashe-elementor-acf-editor' ) .
+                esc_html__( 'Hashe Field Editor requires Elementor and Advanced Custom Fields (ACF or ACF Pro).', 'hashe-elementor-acf-editor' ) .
                 '</p></div>';
         }
     }

@@ -1,0 +1,172 @@
+name: Isolated WordPress lifecycle - Hashe Field Editor
+on:
+  push:
+    branches: ['main', 'release/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wordpress-lifecycle:
+    name: "WP PHP ${{ matrix.php }} / ${{ matrix.install }}"
+    runs-on: ubuntu-latest
+    env:
+      TERM: xterm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2', '8.3']
+        install: ['independent-clean', 'independent-upgrade-v0.5.1', 'wordpress-org-clean']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: qa_password_only
+          MYSQL_DATABASE: hashe_field_editor_qa
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -pqa_password_only"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, mysqli, curl, dom, zip, openssl
+          tools: none
+          coverage: none
+      - name: Initialize disposable WordPress, Elementor and ACF Free
+        shell: bash
+        run: |
+          ( clear
+            set -euo pipefail
+            echo '=== EPHEMERAL WORDPRESS INITIALIZATION ==='
+            curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$RUNNER_TEMP/wp-cli.phar"
+            echo "WP_BIN=$RUNNER_TEMP/wp-cli.phar" >> "$GITHUB_ENV"
+            echo "WP_ROOT=$RUNNER_TEMP/wordpress" >> "$GITHUB_ENV"
+            php "$RUNNER_TEMP/wp-cli.phar" core download --path="$RUNNER_TEMP/wordpress" --version=7.1.4
+            php "$RUNNER_TEMP/wp-cli.phar" config create --path="$RUNNER_TEMP/wordpress" --dbname=hashe_field_editor_qa --dbuser=root --dbpass=qa_password_only --dbhost=127.0.0.1 --skip-check
+            php "$RUNNER_TEMP/wp-cli.phar" core install --path="$RUNNER_TEMP/wordpress" --url='http://localhost:8080' --title='Disposable Field Editor QA' --admin_user=qa_admin --admin_password=qa_dummy_only --admin_email=qa@example.invalid --skip-email
+            php "$RUNNER_TEMP/wp-cli.phar" plugin install elementor --activate --version=4.3.5 --path="$RUNNER_TEMP/wordpress"
+            php "$RUNNER_TEMP/wp-cli.phar" plugin install advanced-custom-fields --activate --path="$RUNNER_TEMP/wordpress"
+            echo 'WORDPRESS_DEPENDENCIES_INSTALLED=PASS'
+          )
+      - name: Build and verify both isolated candidate archives
+        shell: bash
+        run: |
+          ( clear
+            set -euo pipefail
+            echo '=== CANDIDATE PACKAGING ==='
+            python3 tests/distribution-test.py
+            python3 tools/build_distributions.py --output dist-lifecycle
+            (cd dist-lifecycle && sha256sum --check SHA256SUMS.txt)
+            echo 'CANDIDATE_ARCHIVES_VERIFIED=PASS'
+          )
+      - name: Clean install or verified stable v0.5.1 upgrade
+        shell: bash
+        env:
+          INSTALL_CASE: ${{ matrix.install }}
+        run: |
+          ( clear
+            set -euo pipefail
+            echo "=== INSTALL CASE: $INSTALL_CASE ==="
+            if [[ "$INSTALL_CASE" == 'wordpress-org-clean' ]]; then
+              SLUG=hashe-field-editor
+              ZIP="$GITHUB_WORKSPACE/dist-lifecycle/hashe-field-editor-v0.6.0-wporg.zip"
+              echo 'HASHE_QA_DISTRIBUTION=wordpress-org' >> "$GITHUB_ENV"
+              echo 'HASHE_QA_UPGRADE=0' >> "$GITHUB_ENV"
+            else
+              SLUG=hashe-elementor-acf-editor
+              ZIP="$GITHUB_WORKSPACE/dist-lifecycle/hashe-elementor-acf-editor-v0.6.0.zip"
+              echo 'HASHE_QA_DISTRIBUTION=independent' >> "$GITHUB_ENV"
+              if [[ "$INSTALL_CASE" == 'independent-upgrade-v0.5.1' ]]; then
+                curl -fsSL 'https://github.com/HasheCS/hashe-elementor-acf-editor/releases/download/v0.5.1/hashe-elementor-acf-editor-v0.5.1.zip' -o "$RUNNER_TEMP/previous.zip"
+                echo 'b764d7a72952886b88a6a6379306ff68516d9e74f77c4ba24464c3ea880f8ffe  '"$RUNNER_TEMP/previous.zip" | sha256sum --check -
+                php "$WP_BIN" plugin install "$RUNNER_TEMP/previous.zip" --activate --path="$WP_ROOT"
+                [[ "$(php "$WP_BIN" plugin get "$SLUG" --field=version --path="$WP_ROOT")" == '0.5.1' ]]
+                php "$WP_BIN" option update hashe_acf_qa_upgrade_marker preserved-from-v0.5.1 --path="$WP_ROOT"
+                echo 'HASHE_QA_UPGRADE=1' >> "$GITHUB_ENV"
+              else
+                echo 'HASHE_QA_UPGRADE=0' >> "$GITHUB_ENV"
+              fi
+            fi
+            php "$WP_BIN" plugin install "$ZIP" --activate --force --path="$WP_ROOT"
+            [[ "$(php "$WP_BIN" plugin get "$SLUG" --field=version --path="$WP_ROOT")" == '0.6.0' ]]
+            php "$WP_BIN" plugin is-active "$SLUG" --path="$WP_ROOT"
+            echo "HASHE_QA_SLUG=$SLUG" >> "$GITHUB_ENV"
+            echo 'CANDIDATE_INSTALLED_AND_ACTIVE=PASS'
+          )
+      - name: Both v1.2 WordPress.org candidates coexist without updater or consent conflicts
+        if: matrix.php == '8.2' && matrix.install == 'wordpress-org-clean'
+        shell: bash
+        run: |
+          ( clear
+            set -euo pipefail
+            echo '=== PINNED FA7 WP.ORG + FIELD EDITOR WP.ORG JOINT QA ==='
+            export TERM=xterm
+            fa7_sha=45a58b2cce1c6609415bdf39789c0928e654d850
+            git clone --quiet --no-checkout https://github.com/HasheCS/hashe-fa7-elementor.git "$RUNNER_TEMP/hashe-fa7"
+            git -C "$RUNNER_TEMP/hashe-fa7" checkout --quiet --detach "$fa7_sha"
+            test "$(git -C "$RUNNER_TEMP/hashe-fa7" rev-parse HEAD)" = "$fa7_sha"
+            python3 "$RUNNER_TEMP/hashe-fa7/tools/build_fa7_candidate.py" --output "$RUNNER_TEMP/hashe-fa7-dist"
+            (cd "$RUNNER_TEMP/hashe-fa7-dist" && sha256sum -c SHA256SUMS.txt)
+            php "$WP_BIN" plugin install "$RUNNER_TEMP/hashe-fa7-dist/hashe-fa7-elementor-v1.1.3-wporg-development.zip" --activate --path="$WP_ROOT"
+            HASHE_QA_EPHEMERAL=1 php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-fa7-wporg-coexistence-v12.php" --path="$WP_ROOT"
+            php "$WP_BIN" plugin deactivate hashe-fa7-elementor --path="$WP_ROOT"
+            php "$WP_BIN" plugin uninstall hashe-fa7-elementor --path="$WP_ROOT"
+            php "$WP_BIN" plugin is-active hashe-field-editor --path="$WP_ROOT"
+            echo 'PINNED_DUAL_DIRECTORY_COEXISTENCE_PASS'
+          )
+      - name: WordPress hooks, ACF storage, default-off consent and lifecycle
+        shell: bash
+        env:
+          INSTALL_CASE: ${{ matrix.install }}
+          QA_PHP: ${{ matrix.php }}
+        run: |
+          ( clear
+            set -euo pipefail
+            echo '=== ISOLATED WORDPRESS INTEGRATION CHECKS ==='
+            php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-live-integration.php" --path="$WP_ROOT"
+            php "$WP_BIN" plugin deactivate "$HASHE_QA_SLUG" --path="$WP_ROOT"
+            php "$WP_BIN" plugin activate "$HASHE_QA_SLUG" --path="$WP_ROOT"
+            php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-live-integration.php" --path="$WP_ROOT"
+            if [[ "$QA_PHP" == '8.2' ]]; then
+              echo '=== REAL ELEMENTOR PAGE SETTINGS CONTROLS ACCEPTANCE ==='
+              HASHE_QA_EPHEMERAL=1 php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-elementor-controls-integration.php" --path="$WP_ROOT"
+              echo '=== REAL WORDPRESS AJAX SAVE/SECURITY ACCEPTANCE ==='
+              HASHE_QA_EPHEMERAL=1 python3 "$GITHUB_WORKSPACE/tests/check-wordpress-acf-ajax.py"
+            fi
+            if [[ "$INSTALL_CASE" == 'independent-clean' && "$QA_PHP" == '8.2' ]]; then
+              python3 "$GITHUB_WORKSPACE/tests/build-synthetic-upgrade.py" \
+                "$GITHUB_WORKSPACE/dist-lifecycle/hashe-elementor-acf-editor-v0.6.0.zip" \
+                "$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip"
+              HASHE_QA_SYNTHETIC_ZIP="$RUNNER_TEMP/hashe-elementor-acf-editor-v0.6.1-SYNTHETIC-QA.zip" \
+                php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-native-update-simulation.php" --path="$WP_ROOT"
+            fi
+            if [[ "$QA_PHP" == '8.2' && ( "$INSTALL_CASE" == 'independent-clean' || "$INSTALL_CASE" == 'wordpress-org-clean' ) ]]; then
+              for stage in default skip skipped allow report offline revoke-fail pending; do
+                HASHE_QA_CONSENT_STAGE="$stage" php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-consent-live-integration.php" --path="$WP_ROOT"
+              done
+              if HASHE_QA_CONSENT_STAGE=skip-pending php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-consent-live-integration.php" --path="$WP_ROOT"; then
+                echo 'ERROR: Pending deletion accepted stale Skip'
+                exit 7
+              fi
+              if HASHE_QA_CONSENT_STAGE=allow-pending php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-consent-live-integration.php" --path="$WP_ROOT"; then
+                echo 'ERROR: Pending deletion accepted stale Allow'
+                exit 8
+              fi
+              for stage in pending-persisted retry revoked; do
+                HASHE_QA_CONSENT_STAGE="$stage" php "$WP_BIN" eval-file "$GITHUB_WORKSPACE/tests/wordpress-consent-live-integration.php" --path="$WP_ROOT"
+              done
+              echo 'WORDPRESS_REAL_CONSENT_AND_REVOCATION_FLOW=PASS'
+            fi
+            php "$WP_BIN" plugin deactivate "$HASHE_QA_SLUG" --path="$WP_ROOT"
+            php "$WP_BIN" plugin uninstall "$HASHE_QA_SLUG" --path="$WP_ROOT"
+            if php "$WP_BIN" plugin is-installed "$HASHE_QA_SLUG" --path="$WP_ROOT"; then
+              echo 'ERROR: Plugin still installed after uninstall'
+              exit 6
+            fi
+            echo 'CLEAN_INSTALL_UPGRADE_DEACTIVATE_REACTIVATE_UNINSTALL=PASS'
+          )

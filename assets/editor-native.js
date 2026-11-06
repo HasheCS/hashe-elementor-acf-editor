@@ -4,6 +4,7 @@
 
     var busy = false;
     var baseline = null;
+    var baselinePhase = 'not-started';
 
     function pageSettingsModel() {
         // Elementor's Page Settings controls are backed by this Backbone model.
@@ -171,15 +172,29 @@
     // unrelated ACF fields (notably Password, Time, Google Map and Clone).
     function readSnapshot() {
         var model = pageSettingsModel();
-        if (!model || !window.HEAE || !Array.isArray(HEAE.fields)) return null;
+        if (!model || !window.HEAE || !Array.isArray(HEAE.fields)) {
+            baselinePhase = 'model-or-schema-unavailable';
+            return null;
+        }
         var snapshot = {};
         for (var i = 0; i < HEAE.fields.length; i++) {
             var field = HEAE.fields[i];
             if (!field.editable) continue;
-            var value = normalizeModelValue(model.get(field.id));
-            if (value === undefined) return null;
-            snapshot[field.key] = JSON.stringify(asAcfValue(field, value));
+            try {
+                var value = normalizeModelValue(model.get(field.id));
+                if (value === undefined) {
+                    baselinePhase = 'undefined-value:' + field.type;
+                    return null;
+                }
+                snapshot[field.key] = JSON.stringify(asAcfValue(field, value));
+            } catch (error) {
+                // Never include field values or user input in diagnostics.
+                baselinePhase = 'conversion-error:' + field.type + ':' +
+                    (error && error.name ? error.name : 'Error');
+                return null;
+            }
         }
+        baselinePhase = 'snapshot-ready';
         return snapshot;
     }
 
@@ -187,21 +202,57 @@
         if (baseline) return true;
         // Wait for actual Page Settings controls to mount; Elementor builds
         // its Backbone model asynchronously before the ACF tab is visible.
-        if (!document.querySelector('#elementor-panel .elementor-control-heae_acf_save_action button')) return false;
+        if (!document.querySelector('#elementor-panel .elementor-control-heae_acf_save_action button')) {
+            baselinePhase = 'save-control-not-mounted';
+            return false;
+        }
         var snapshot = readSnapshot();
         if (!snapshot) return false;
         baseline = snapshot;
+        baselinePhase = 'ready';
         return true;
     }
 
+    // Read-only support probe. Reports readiness state and counts only; no ACF
+    // values, nonces, account details or requests are exposed. Useful for QA
+    // when Elementor mounts a Page Settings panel asynchronously.
+    if (window.HEAE && typeof window.HEAE === 'object') {
+        window.HEAE.readiness = function () {
+            return {
+                phase: baselinePhase,
+                captured: !!baseline,
+                saveControlMounted: !!document.querySelector(
+                    '#elementor-panel .elementor-control-heae_acf_save_action button'
+                ),
+                modelAvailable: !!pageSettingsModel(),
+                editableFieldCount: Array.isArray(HEAE.fields)
+                    ? HEAE.fields.filter(function (field) { return !!field.editable; }).length
+                    : 0
+            };
+        };
+    }
+
     $(function () {
-        var tries = 0;
-        var timer = window.setInterval(function () {
-            tries++;
-            if (captureBaseline() || tries >= 600) {
-                window.clearInterval(timer);
-            }
-        }, 100);
+        // Elementor may mount the ACF Page Settings panel long after the editor
+        // itself loads. A fixed 60-second timeout previously disabled saving
+        // permanently if the administrator opened ACF later. Keep observing
+        // until the original rendered field values are safely captured.
+        var observer = null;
+        var timer = null;
+        function tryCapture() {
+            if (!captureBaseline()) return;
+            if (observer) observer.disconnect();
+            if (timer !== null) window.clearInterval(timer);
+        }
+        if (typeof window.MutationObserver === 'function' && document.body) {
+            observer = new window.MutationObserver(tryCapture);
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+        // Also cover Backbone model population without a DOM mutation and
+        // browsers where MutationObserver is unavailable. This is a lightweight
+        // one-second check and stops once the baseline is captured.
+        timer = window.setInterval(tryCapture, 1000);
+        tryCapture();
     });
 
     function status(message, isError) {
